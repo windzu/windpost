@@ -41,10 +41,10 @@ WePost 不再作为 Obsidian 插件继续使用。它只作为现有 Markdown �
 可以预览最终富文本，小红书可以预览标题、正文和卡片。默认停在不可逆操作之前，
 由作者完成最终确认。
 
-小红书优先读取笔记中「### 小红书」下的「标题」、「封面文案」、「正文」和
-「标签」；正文留空或指向「发布版本」时，会自动使用「## 发布版本」，其次是
-「## 正文草稿」。WindPost 生成 3:4 图文卡片后打开创作服务平台，上传图片并填写
-标题、正文和标签，但不会点击最终发布。
+小红书与 Blog、公众号共用笔记的 `title` 和 Markdown 正文，只额外读取 Properties
+中的 `cover_text` 与 `tags`。未设置 `cover_text` 时使用 `title` 渲染封面。WindPost
+生成 3:4 图文卡片后打开创作服务平台，上传图片并填写标题、正文和标签，但不会
+点击最终发布，也不要求笔记维护平台专属章节。
 
 WindPost 不要求作者为了统一模型而维护固定 frontmatter。需要什么信息，就从
 当前笔记、Obsidian metadata、插件配置或发布时输入中获取；具体字段随真实需求演进。
@@ -130,7 +130,7 @@ WindScroll，私人 vault 也不会进入公开仓库。
 - 用户确认后，Blog 文章与附件通过 GitHub Git Database API组成一个 commit；
 - GitHub Token 和公众号 AppSecret 使用 Obsidian SecretStorage 保存；
 - WindScroll 已支持 Notion 与 WindPost 文章并存，同 slug 时使用 WindPost 版本；
-- 小红书已支持平台版本解析、发布前检查、3:4 图文卡片预览与生成；
+- 小红书已支持从公共标题、正文、`cover_text` 和 `tags` 生成 3:4 图文卡片并执行发布前检查；
 - 小红书已接入持久化登录浏览器，可以自动上传卡片并填写标题、正文和标签；
 - 小红书最终发布保留人工确认，不由 WindPost 自动点击；
 - 公众号草稿 API 尚未接入。

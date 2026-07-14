@@ -31,21 +31,11 @@ export function prepareXiaohongshuDraft({
   maxImages: number;
 }): XiaohongshuDraft {
   const { frontmatter, body } = splitFrontmatter(markdown);
-  const platformSection = extractSection(body, 3, ["小红书"]);
-  const fields = readPlatformFields(platformSection);
   const titleFromHeading = body.match(/^#\s+(.+)$/m)?.[1]?.trim() || "";
-  const fallbackTitle = readString(frontmatter.title) || titleFromHeading || basename(path);
-  const title = fields.title || readString(frontmatter.xhs_title) || fallbackTitle;
-  const coverText = fields.coverText || readString(frontmatter.xhs_cover) || title;
-  const preferredBody =
-    extractSection(body, 2, ["发布版本"]) ||
-    extractSection(body, 2, ["正文草稿"]) ||
-    extractSection(body, 2, ["正文"]);
-  const explicitContent = fields.content && !/^使用.*(?:发布版本|正文草稿)/.test(fields.content)
-    ? fields.content
-    : "";
-  const content = markdownToPlainText(explicitContent || preferredBody || bodyWithoutTitle(body));
-  const tags = fields.tags.length > 0 ? fields.tags : readTags(frontmatter.tags);
+  const title = readString(frontmatter.title) || titleFromHeading || basename(path);
+  const coverText = readString(frontmatter.cover_text) || title;
+  const content = markdownToPlainText(bodyWithoutTitle(body));
+  const tags = readTags(frontmatter.tags);
   const preparedCards = buildCards(content, coverText, clampImages(maxImages));
   const warnings: string[] = [];
   const channels = readTags(frontmatter.channels);
@@ -55,9 +45,6 @@ export function prepareXiaohongshuDraft({
   }
   if (channels.length > 0 && !channels.includes("xiaohongshu")) {
     warnings.push("channels 未包含 xiaohongshu。");
-  }
-  if (!platformSection) {
-    warnings.push("未找到「### 小红书」平台版本，当前使用笔记标题和正文。");
   }
   if (countText(title) > SUGGESTED_TITLE_LENGTH) {
     warnings.push(`标题较长（${countText(title)} 字符），建议控制在 ${SUGGESTED_TITLE_LENGTH} 字以内。`);
@@ -128,64 +115,6 @@ function splitFrontmatter(markdown: string): {
   }
 }
 
-function extractSection(markdown: string, level: number, names: string[]): string {
-  const lines = markdown.split(/\r?\n/);
-  const targets = new Set(names.map(normalizeHeading));
-  let start = -1;
-
-  for (let i = 0; i < lines.length; i += 1) {
-    const heading = lines[i].match(/^(#{1,6})\s+(.+?)\s*$/);
-    if (!heading || heading[1].length !== level) continue;
-    if (targets.has(normalizeHeading(heading[2]))) {
-      start = i + 1;
-      break;
-    }
-  }
-  if (start < 0) return "";
-
-  let end = lines.length;
-  for (let i = start; i < lines.length; i += 1) {
-    const heading = lines[i].match(/^(#{1,6})\s+/);
-    if (heading && heading[1].length <= level) {
-      end = i;
-      break;
-    }
-  }
-  return lines.slice(start, end).join("\n").trim();
-}
-
-function normalizeHeading(value: string): string {
-  return value.replace(/[\s：:]+$/g, "").trim().toLowerCase();
-}
-
-function readPlatformFields(section: string): {
-  title: string;
-  coverText: string;
-  content: string;
-  tags: string[];
-} {
-  if (!section) return { title: "", coverText: "", content: "", tags: [] };
-  const bullets = new Map<string, string>();
-  for (const line of section.split(/\r?\n/)) {
-    const match = line.match(/^\s*[-*]\s*(标题|封面文案|封面|正文|标签)\s*[：:]\s*(.*?)\s*$/);
-    if (match) bullets.set(match[1], match[2]);
-  }
-
-  return {
-    title: readNamedBlock(section, ["标题"]) || bullets.get("标题") || "",
-    coverText: readNamedBlock(section, ["封面文案", "封面"])
-      || bullets.get("封面文案")
-      || bullets.get("封面")
-      || "",
-    content: readNamedBlock(section, ["正文"]) || bullets.get("正文") || "",
-    tags: parseTags(readNamedBlock(section, ["标签"]) || bullets.get("标签") || ""),
-  };
-}
-
-function readNamedBlock(section: string, names: string[]): string {
-  return extractSection(section, 4, names);
-}
-
 function readString(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -204,7 +133,7 @@ function parseTags(value: string): string[] {
 }
 
 function bodyWithoutTitle(body: string): string {
-  return body.replace(/^#\s+.+$/m, "").trim();
+  return body.replace(/^(?:\s*\r?\n)*#\s+.+(?:\r?\n|$)/, "").trim();
 }
 
 function markdownToPlainText(markdown: string): string {
