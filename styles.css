@@ -1,0 +1,380 @@
+/* ============================================================
+   WindPost — Obsidian plugin styles
+   样式作用域：仅 .windpost-view 内，避免污染笔记编辑器
+   ============================================================ */
+
+.windpost-view {
+  padding: 0 !important;
+}
+
+.windpost-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #1f2430;
+  color: var(--text-normal);
+  font-family: var(--font-text);
+}
+
+/* ---------- Header ---------- */
+
+.windpost-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #404040;
+  background: #1a1e29;
+  flex-shrink: 0;
+}
+
+.windpost-header-label {
+  font-size: 10px;
+  color: #8a9099;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.windpost-header-path {
+  flex: 1;
+  font-size: 12px;
+  color: #d6d8dc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.windpost-header-status {
+  font-size: 11px;
+  color: #7a8088;
+  flex-shrink: 0;
+}
+
+/* ---------- Main / Preview area ---------- */
+
+.windpost-main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.windpost-channels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid #404040;
+  background: #1a1e29;
+}
+
+.windpost-channel {
+  height: 32px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.windpost-channel:hover,
+.windpost-channel.is-active {
+  background: #2a303d;
+  color: #f3f4f6;
+}
+
+.windpost-channel.is-active {
+  box-shadow: inset 0 -2px #60a5fa;
+}
+
+.windpost-channel-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding: 0 12px;
+  overflow: hidden;
+  border-bottom: 1px solid #343943;
+  background: #202631;
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.windpost-channel-meta strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #e5e7eb;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.windpost-preview-wrapper {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.windpost-preview-wrapper.is-page {
+  padding: 18px;
+  align-items: stretch;
+}
+
+.windpost-page-frame {
+  width: min(100%, 900px);
+  height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgb(0 0 0 / 30%);
+}
+
+/* ---------- PhoneMockup ---------- */
+
+.windpost-phone-wrapper {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.windpost-phone-frame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.windpost-phone-screen {
+  position: absolute;
+  z-index: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.windpost-phone-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.windpost-preview-iframe {
+  height: 100%;
+  width: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.windpost-preview-empty,
+.windpost-preview-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 24px;
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.windpost-preview-empty {
+  color: #9ca3af;
+}
+
+.windpost-preview-error {
+  color: #f87171;
+}
+
+/* ---------- Xiaohongshu preview ---------- */
+
+.windpost-xhs-preview {
+  width: 100%;
+  height: 100%;
+  padding: 14px;
+  overflow: auto;
+  color: #d6d8dc;
+}
+
+.windpost-xhs-warnings {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgb(245 158 11 / 32%);
+  border-radius: 7px;
+  background: rgb(245 158 11 / 8%);
+  color: #fbbf24;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.windpost-xhs-warnings ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.windpost-xhs-section,
+.windpost-xhs-copy {
+  width: min(100%, 920px);
+  margin: 0 auto;
+}
+
+.windpost-xhs-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.windpost-xhs-section-header strong {
+  color: #f3f4f6;
+}
+
+.windpost-xhs-section-header span {
+  color: #7a8088;
+  font-size: 11px;
+}
+
+.windpost-xhs-cards {
+  display: flex;
+  gap: 12px;
+  padding: 2px 2px 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+
+.windpost-xhs-card {
+  position: relative;
+  width: 216px;
+  aspect-ratio: 3 / 4;
+  flex: 0 0 216px;
+  overflow: hidden;
+  border-radius: 7px;
+  background: #fbfaf7;
+  color: #1f2937;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 24%);
+  scroll-snap-align: start;
+}
+
+.windpost-xhs-card-accent {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  border-left: 4px solid #e94b5f;
+  border-right: 2px solid #111827;
+}
+
+.windpost-xhs-card-text {
+  padding: 24px 20px 34px 26px;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.windpost-xhs-card.is-cover .windpost-xhs-card-text {
+  padding-top: 72px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.windpost-xhs-card.is-content .windpost-xhs-card-text {
+  font-size: 12px;
+}
+
+.windpost-xhs-card-page {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  color: #9ca3af;
+  font-size: 9px;
+}
+
+.windpost-xhs-copy {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 12px;
+}
+
+.windpost-xhs-copy-block {
+  padding: 12px;
+  border: 1px solid #343943;
+  border-radius: 7px;
+  background: #202631;
+}
+
+.windpost-xhs-title {
+  margin: 0;
+  color: #f3f4f6;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.windpost-xhs-content {
+  max-height: 220px;
+  overflow: auto;
+  color: #c5c9d0;
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.windpost-xhs-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.windpost-xhs-tags span {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgb(233 75 95 / 14%);
+  color: #f29aa6;
+  font-size: 11px;
+}
+
+.windpost-xhs-tags span.is-empty {
+  background: transparent;
+  color: #7a8088;
+}
+
+/* ---------- Actions ---------- */
+
+.windpost-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 52px;
+  padding: 8px 12px;
+  background: #1a1e29;
+  border-top: 1px solid #404040;
+  flex-shrink: 0;
+}
+
+.windpost-actions button {
+  min-width: 150px;
+}
+
+.windpost-not-designed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 420px;
+  padding: 32px;
+  color: #9ca3af;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.windpost-not-designed strong {
+  color: #e5e7eb;
+  font-size: 16px;
+}

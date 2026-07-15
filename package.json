@@ -1,0 +1,62 @@
+{
+  "name": "obsidian-windpost",
+  "version": "0.1.0",
+  "description": "Publish the current Obsidian note to Blog, WeChat and Xiaohongshu.",
+  "main": "main.js",
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "test": "node --test tests/xhs-uploader.test.cjs"
+  },
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "blog",
+    "wechat",
+    "xiaohongshu"
+  ],
+  "author": "windzu",
+  "license": "MIT",
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "juice": "^11.1.0",
+    "katex": "^0.16.27",
+    "lucide-react": "^0.562.0",
+    "mdast-util-from-markdown": "^2.0.2",
+    "mdast-util-gfm": "^3.1.0",
+    "micromark-extension-gfm": "^3.0.0",
+    "playwright": "^1.60.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "rehype-external-links": "^3.0.0",
+    "rehype-github-alert": "^1.0.0",
+    "rehype-highlight": "^7.0.2",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "rehype-stringify": "^10.0.1",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "smol-toml": "^1.6.1",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0",
+    "yaml": "^2.8.3"
+  },
+  "devDependencies": {
+    "@types/hast": "^3.0.4",
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^20.11.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "builtin-modules": "3.3.0",
+    "esbuild": "0.24.0",
+    "obsidian": "latest",
+    "tslib": "2.7.0",
+    "typescript": "5.5.4"
+  }
+}
