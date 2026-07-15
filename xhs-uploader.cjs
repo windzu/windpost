@@ -6,10 +6,12 @@ const path = require("path");
 const READY = "__WINDPOST_XHS_READY__";
 const LOGIN = "__WINDPOST_XHS_LOGIN__";
 
-main().catch((error) => {
-  console.error(`[WindPost XHS] ${error && error.stack ? error.stack : error}`);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(`[WindPost XHS] ${error && error.stack ? error.stack : error}`);
+    process.exit(1);
+  });
+}
 
 async function main() {
   const payloadPath = process.argv[2];
@@ -36,9 +38,10 @@ async function main() {
   await chooseImageNote(page);
   console.log(`[WindPost XHS] 正在上传 ${payload.imagePaths.length} 张图片…`);
   await uploadImages(page, payload.imagePaths);
-  console.log("[WindPost XHS] 正在填写标题和正文…");
+  console.log("[WindPost XHS] 正在填写标题、正文和话题…");
   await fillTitle(page, payload.title);
-  await fillContent(page, composeContent(payload.content, payload.tags));
+  const contentEditor = await fillContent(page, payload.content);
+  await fillTopics(page, contentEditor, payload.tags);
 
   if (payload.autoSubmit) {
     await clickPublish(page);
@@ -126,15 +129,96 @@ async function fillContent(page, content) {
     page.locator("textarea").first(),
     page.locator('[contenteditable="true"]').first(),
   ];
-  await fillFirst(locators, content, "正文");
+  return fillFirst(locators, content, "正文");
 }
 
-function composeContent(content, tags) {
-  const normalizedTags = Array.isArray(tags)
-    ? tags.map((tag) => String(tag).replace(/^#+|#+$/g, "").trim()).filter(Boolean)
-    : [];
-  const tagLine = normalizedTags.map((tag) => `#${tag}`).join(" ");
-  return [content.trim(), tagLine].filter(Boolean).join("\n\n");
+async function fillTopics(page, editor, tags) {
+  const normalizedTags = normalizeTags(tags);
+  if (normalizedTags.length === 0) return;
+
+  await placeCursorAtEnd(editor);
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+
+  for (const tag of normalizedTags) {
+    await page.keyboard.type("#");
+    await page.waitForTimeout(150);
+    await page.keyboard.type(tag, { delay: 50 });
+    await waitForTopicSuggestion(page, tag, true);
+    await page.keyboard.press("Enter");
+    await waitForTopicSuggestion(page, tag, false);
+    await page.keyboard.type(" ");
+  }
+}
+
+function normalizeTags(tags) {
+  if (!Array.isArray(tags)) return [];
+  return [...new Set(tags
+    .map((tag) => String(tag).replace(/^#+|#+$/g, "").trim())
+    .filter(Boolean))];
+}
+
+async function placeCursorAtEnd(editor) {
+  await editor.click();
+  await editor.evaluate((element) => {
+    element.focus();
+    if ("setSelectionRange" in element && typeof element.setSelectionRange === "function") {
+      const length = typeof element.value === "string" ? element.value.length : 0;
+      element.setSelectionRange(length, length);
+      return;
+    }
+
+    const selection = window.getSelection();
+    if (!selection) return;
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  });
+}
+
+async function waitForTopicSuggestion(page, tag, expectedVisible) {
+  try {
+    await page.waitForFunction(
+      topicSuggestionVisibilityMatches,
+      { tag, expectedVisible },
+      { timeout: expectedVisible ? 5000 : 3000 },
+    );
+  } catch {
+    if (expectedVisible) {
+      throw new Error(`未找到小红书话题候选：#${tag}`);
+    }
+    throw new Error(`小红书话题绑定失败：#${tag}`);
+  }
+}
+
+function topicSuggestionVisibilityMatches({ tag, expectedVisible }) {
+  const editor = document.querySelector(
+    ".tiptap.ProseMirror[contenteditable=\"true\"], .ProseMirror[contenteditable=\"true\"]",
+  );
+  const normalizedTag = tag.replace(/^#/, "").trim();
+  const visible = [...document.querySelectorAll("body *")].some((element) => {
+    if (editor && editor.contains(element)) return false;
+    const text = (element.textContent || "").replace(/^#/, "").trim();
+    if (!text.startsWith(normalizedTag)) return false;
+
+    const rect = element.getBoundingClientRect();
+    const style = window.getComputedStyle(element);
+    if (rect.width === 0 || rect.height === 0 || style.visibility === "hidden" || style.display === "none") {
+      return false;
+    }
+
+    if (element.closest('[role="listbox"], [role="menu"], [role="option"]')) return true;
+    let ancestor = element;
+    while (ancestor && ancestor !== document.body) {
+      const ancestorStyle = window.getComputedStyle(ancestor);
+      if (ancestorStyle.position === "absolute" || ancestorStyle.position === "fixed") return true;
+      ancestor = ancestor.parentElement;
+    }
+    return false;
+  });
+  return visible === expectedVisible;
 }
 
 async function fillFirst(locators, value, label) {
@@ -144,7 +228,7 @@ async function fillFirst(locators, value, label) {
       await locator.waitFor({ state: "visible", timeout: 5000 });
       await locator.click();
       await locator.fill(value);
-      return;
+      return locator;
     } catch (error) {
       lastError = error;
       try {
@@ -158,7 +242,7 @@ async function fillFirst(locators, value, label) {
             el.dispatchEvent(new InputEvent("input", { bubbles: true, data: text }));
           }
         }, value);
-        return;
+        return locator;
       } catch (innerError) {
         lastError = innerError;
       }
@@ -193,3 +277,8 @@ async function clickByText(page, texts, timeout) {
 async function waitUntilClosed(context) {
   await new Promise((resolve) => context.once("close", resolve));
 }
+
+module.exports = {
+  fillTopics,
+  normalizeTags,
+};
