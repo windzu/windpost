@@ -2,6 +2,7 @@ import { normalizePath, type App } from "obsidian";
 import YAML from "yaml";
 import type {
   XiaohongshuCard,
+  XiaohongshuCardBlock,
   XiaohongshuDraft,
   XiaohongshuPost,
 } from "./types";
@@ -9,17 +10,30 @@ import type {
 interface PreparedCards {
   cards: XiaohongshuCard[];
   truncated: boolean;
+  coverOverflow: boolean;
 }
 
 const CARD_WIDTH = 1080;
 const CARD_HEIGHT = 1440;
-const CARD_PADDING_X = 92;
-const CARD_PADDING_Y = 110;
-const CARD_TEXT_LIMIT = 210;
+const CARD_PADDING_X = 104;
+const CONTENT_TOP = 158;
+const CONTENT_BOTTOM = 1168;
+const CONTENT_MAX_HEIGHT = CONTENT_BOTTOM - CONTENT_TOP;
+const COVER_MAX_HEIGHT = 820;
+const BLOCK_GAP = 42;
 const SUGGESTED_TITLE_LENGTH = 20;
 const SUGGESTED_CONTENT_LENGTH = 1000;
-const BODY_FONT = "42px -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans CJK SC', sans-serif";
-const TITLE_FONT = "700 72px -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans CJK SC', sans-serif";
+const COLOR_INK = "#141413";
+const COLOR_PAPER = "#faf9f5";
+const COLOR_MUTED = "#8f8d85";
+const COLOR_LINE = "#e8e6dc";
+const COLOR_ACCENT = "#d97757";
+const SANS_FAMILY = "Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+const SERIF_FAMILY = "Georgia, 'Songti SC', STSong, serif";
+const BODY_FONT = `44px ${SERIF_FAMILY}`;
+const BODY_LINE_HEIGHT = 72;
+const EMPHASIS_FONT = `600 56px ${SANS_FAMILY}`;
+const EMPHASIS_LINE_HEIGHT = 76;
 
 export function prepareXiaohongshuDraft({
   markdown,
@@ -60,6 +74,9 @@ export function prepareXiaohongshuDraft({
   if (preparedCards.truncated) {
     warnings.push(`正文超出 ${preparedCards.cards.length} 张卡片的容量，部分内容只会保留在正文中。`);
   }
+  if (preparedCards.coverOverflow) {
+    warnings.push("封面文案过长，无法在保证可读性的前提下完整排入头图，请精简 cover_text。");
+  }
 
   return {
     title,
@@ -84,7 +101,7 @@ export async function exportXiaohongshuPost({
   const imagePaths: string[] = [];
 
   for (let i = 0; i < draft.cards.length; i += 1) {
-    const png = await renderCard(draft.cards[i], i, draft.cards.length);
+    const png = await renderXiaohongshuCard(draft.cards[i], i, draft.cards.length);
     const fileName = `${String(i + 1).padStart(2, "0")}.png`;
     const vaultPath = normalizePath(`${outputDir.vaultPath}/${fileName}`);
     await app.vault.adapter.writeBinary(vaultPath, png);
@@ -154,40 +171,116 @@ function markdownToPlainText(markdown: string): string {
 }
 
 function buildCards(content: string, coverText: string, maxImages: number): PreparedCards {
-  const cards: XiaohongshuCard[] = [{ kind: "cover", text: coverText }];
-  if (!content || maxImages <= 1) return { cards, truncated: Boolean(content) };
+  const ctx = createMeasureContext();
+  const coverLayout = layoutCoverText(ctx, coverText);
+  const cards: XiaohongshuCard[] = [{
+    kind: "cover",
+    text: coverText,
+    lines: coverLayout.lines,
+    fontSize: coverLayout.fontSize,
+  }];
+  if (!content || maxImages <= 1) {
+    return {
+      cards,
+      truncated: Boolean(content),
+      coverOverflow: coverLayout.overflow,
+    };
+  }
 
-  const units = content
+  const blocks: XiaohongshuCardBlock[] = content
     .split(/\n{2,}/)
-    .map((block) => block.trim())
+    .map((text) => text.trim())
     .filter(Boolean)
-    .flatMap((block) => chunkText(block, CARD_TEXT_LIMIT));
-  const pages: string[] = [];
-  let current = "";
+    .map((text) => ({ kind: "paragraph", text }));
+  const fittedBlocks = blocks.flatMap((block) => layoutBlock(ctx, block));
+  const pages: XiaohongshuCardBlock[][] = [];
+  let current: XiaohongshuCardBlock[] = [];
+  let currentHeight = 0;
 
-  for (const unit of units) {
-    const next = current ? `${current}\n\n${unit}` : unit;
-    if (countText(next) > CARD_TEXT_LIMIT && current) {
+  for (const block of fittedBlocks) {
+    const blockHeight = measureBlockHeight(ctx, block);
+    const nextHeight = currentHeight + (current.length > 0 ? BLOCK_GAP : 0) + blockHeight;
+    if (nextHeight > CONTENT_MAX_HEIGHT && current.length > 0) {
       pages.push(current);
-      current = unit;
+      current = [block];
+      currentHeight = blockHeight;
     } else {
-      current = next;
+      current.push(block);
+      currentHeight = nextHeight;
     }
   }
-  if (current) pages.push(current);
+  if (current.length > 0) pages.push(current);
 
   const selected = pages.slice(0, maxImages - 1);
-  cards.push(...selected.map((text): XiaohongshuCard => ({ kind: "content", text })));
-  return { cards, truncated: pages.length > selected.length };
+  cards.push(...selected.map((page): XiaohongshuCard => ({
+    kind: "content",
+    text: page.map((block) => block.text).join("\n\n"),
+    blocks: page,
+  })));
+  return {
+    cards,
+    truncated: pages.length > selected.length,
+    coverOverflow: coverLayout.overflow,
+  };
 }
 
-function chunkText(value: string, max: number): string[] {
-  const chars = Array.from(value);
-  const chunks: string[] = [];
-  for (let i = 0; i < chars.length; i += max) {
-    chunks.push(chars.slice(i, i + max).join(""));
+function layoutCoverText(
+  ctx: CanvasRenderingContext2D | null,
+  text: string,
+): { lines: string[]; fontSize: number; overflow: boolean } {
+  const maxWidth = CARD_WIDTH - CARD_PADDING_X * 2;
+  const candidates = [88, 80, 72, 64, 56, 48, 40];
+  for (const fontSize of candidates) {
+    if (ctx) ctx.font = `700 ${fontSize}px ${SANS_FAMILY}`;
+    const lines = wrapText(ctx, text, maxWidth, fontSize);
+    const lineHeight = Math.round(fontSize * 1.28);
+    if (lines.length * lineHeight <= COVER_MAX_HEIGHT) {
+      return { lines, fontSize, overflow: false };
+    }
   }
-  return chunks.length > 0 ? chunks : [value];
+
+  const fontSize = candidates.at(-1)!;
+  if (ctx) ctx.font = `700 ${fontSize}px ${SANS_FAMILY}`;
+  const lines = wrapText(ctx, text, maxWidth, fontSize);
+  return { lines, fontSize, overflow: lines.length * Math.round(fontSize * 1.28) > COVER_MAX_HEIGHT };
+}
+
+function createMeasureContext(): CanvasRenderingContext2D | null {
+  if (typeof document === "undefined") return null;
+  return document.createElement("canvas").getContext("2d");
+}
+
+function layoutBlock(
+  ctx: CanvasRenderingContext2D | null,
+  block: XiaohongshuCardBlock,
+): XiaohongshuCardBlock[] {
+  setBlockFont(ctx, block.kind);
+  const fontSize = block.kind === "emphasis" ? 56 : 44;
+  const lineHeight = block.kind === "emphasis" ? EMPHASIS_LINE_HEIGHT : BODY_LINE_HEIGHT;
+  const lines = wrapText(ctx, block.text, CARD_WIDTH - CARD_PADDING_X * 2, fontSize);
+  if (lines.length * lineHeight <= CONTENT_MAX_HEIGHT) return [{ ...block, lines }];
+  const maxLines = Math.max(1, Math.floor(CONTENT_MAX_HEIGHT / lineHeight));
+  const chunks: XiaohongshuCardBlock[] = [];
+  for (let i = 0; i < lines.length; i += maxLines) {
+    const chunkLines = lines.slice(i, i + maxLines);
+    chunks.push({ ...block, text: chunkLines.join("\n"), lines: chunkLines });
+  }
+  return chunks;
+}
+
+function measureBlockHeight(
+  ctx: CanvasRenderingContext2D | null,
+  block: XiaohongshuCardBlock,
+): number {
+  setBlockFont(ctx, block.kind);
+  const lineHeight = block.kind === "emphasis" ? EMPHASIS_LINE_HEIGHT : BODY_LINE_HEIGHT;
+  if (block.lines) return block.lines.length * lineHeight;
+  const fontSize = block.kind === "emphasis" ? 56 : 44;
+  return wrapText(ctx, block.text, CARD_WIDTH - CARD_PADDING_X * 2, fontSize).length * lineHeight;
+}
+
+function setBlockFont(ctx: CanvasRenderingContext2D | null, kind: XiaohongshuCardBlock["kind"]) {
+  if (ctx) ctx.font = kind === "emphasis" ? EMPHASIS_FONT : BODY_FONT;
 }
 
 function clampImages(value: number): number {
@@ -224,7 +317,7 @@ async function ensureFolder(app: App, path: string) {
   }
 }
 
-async function renderCard(
+export async function renderXiaohongshuCard(
   card: XiaohongshuCard,
   index: number,
   total: number,
@@ -236,9 +329,9 @@ async function renderCard(
   if (!ctx) throw new Error("Canvas 初始化失败。");
 
   drawBackground(ctx);
-  if (card.kind === "cover") drawCover(ctx, card.text);
-  else drawContentCard(ctx, card.text);
-  drawPageNumber(ctx, index, total);
+  if (card.kind === "cover") drawCover(ctx, card);
+  else drawContentCard(ctx, card.blocks || [{ kind: "paragraph", text: card.text }]);
+  drawFooter(ctx, index, total);
 
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((value) => {
@@ -250,75 +343,169 @@ async function renderCard(
 }
 
 function drawBackground(ctx: CanvasRenderingContext2D) {
-  ctx.fillStyle = "#fbfaf7";
+  ctx.fillStyle = COLOR_PAPER;
   ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
-  ctx.fillStyle = "#e94b5f";
-  ctx.fillRect(0, 0, 22, CARD_HEIGHT);
-  ctx.fillStyle = "#111827";
-  ctx.fillRect(22, 0, 6, CARD_HEIGHT);
+  drawTopMark(ctx);
 }
 
-function drawCover(ctx: CanvasRenderingContext2D, coverText: string) {
-  ctx.fillStyle = "#111827";
-  ctx.font = TITLE_FONT;
-  drawWrappedText(ctx, coverText, CARD_PADDING_X, 360, CARD_WIDTH - CARD_PADDING_X * 2, 94, 8);
+function drawTopMark(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = COLOR_ACCENT;
+  ctx.fillRect(CARD_PADDING_X, 108, 54, 7);
+  ctx.fillStyle = COLOR_INK;
+  ctx.font = `600 28px ${SANS_FAMILY}`;
+  ctx.fillText("wind", CARD_PADDING_X + 74, 124);
 }
 
-function drawContentCard(ctx: CanvasRenderingContext2D, text: string) {
-  ctx.font = BODY_FONT;
-  ctx.fillStyle = "#1f2937";
-  drawWrappedText(
-    ctx,
-    text,
-    CARD_PADDING_X,
-    CARD_PADDING_Y + 34,
-    CARD_WIDTH - CARD_PADDING_X * 2,
-    68,
-    16,
-  );
+function drawCover(ctx: CanvasRenderingContext2D, card: XiaohongshuCard) {
+  const layout = card.lines && card.fontSize
+    ? { lines: card.lines, fontSize: card.fontSize, overflow: false }
+    : layoutCoverText(ctx, card.text);
+  if (layout.overflow) {
+    throw new Error("封面文案过长，无法完整渲染，请精简 cover_text。");
+  }
+  const { lines, fontSize } = layout;
+  ctx.font = `700 ${fontSize}px ${SANS_FAMILY}`;
+  const lineHeight = Math.round(fontSize * 1.28);
+  const titleHeight = lines.length * lineHeight;
+  const startY = Math.max(390, Math.round((CARD_HEIGHT - titleHeight) / 2) + fontSize);
+  ctx.fillStyle = COLOR_INK;
+  drawLines(ctx, lines, CARD_PADDING_X, startY, lineHeight);
 }
 
-function drawPageNumber(ctx: CanvasRenderingContext2D, index: number, total: number) {
-  ctx.font = "500 30px -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif";
-  ctx.fillStyle = "#9ca3af";
+function drawContentCard(ctx: CanvasRenderingContext2D, blocks: XiaohongshuCardBlock[]) {
+  let y = CONTENT_TOP;
+  const maxWidth = CARD_WIDTH - CARD_PADDING_X * 2;
+
+  for (const block of blocks) {
+    const emphasis = block.kind === "emphasis";
+    const fontSize = emphasis ? 56 : 44;
+    const lineHeight = emphasis ? EMPHASIS_LINE_HEIGHT : BODY_LINE_HEIGHT;
+    ctx.font = emphasis ? EMPHASIS_FONT : BODY_FONT;
+    ctx.fillStyle = COLOR_INK;
+    const lines = block.lines || wrapText(ctx, block.text, maxWidth, fontSize);
+    drawLines(ctx, lines, CARD_PADDING_X, y + fontSize, lineHeight);
+    y += lines.length * lineHeight + BLOCK_GAP;
+  }
+}
+
+function drawFooter(ctx: CanvasRenderingContext2D, index: number, total: number) {
+  const ruleY = 1288;
+  ctx.fillStyle = COLOR_LINE;
+  ctx.fillRect(CARD_PADDING_X, ruleY, CARD_WIDTH - CARD_PADDING_X * 2, 2);
+  ctx.font = `500 27px ${SANS_FAMILY}`;
+  ctx.fillStyle = COLOR_MUTED;
   ctx.textAlign = "right";
-  ctx.fillText(`${index + 1}/${total}`, CARD_WIDTH - CARD_PADDING_X, CARD_HEIGHT - 88);
+  ctx.fillText(
+    `${String(index + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`,
+    CARD_WIDTH - CARD_PADDING_X,
+    1350,
+  );
   ctx.textAlign = "left";
 }
 
-function drawWrappedText(
+function drawLines(
   ctx: CanvasRenderingContext2D,
-  text: string,
+  lines: string[],
   x: number,
   y: number,
-  maxWidth: number,
   lineHeight: number,
-  maxLines: number,
 ) {
-  const lines = wrapText(ctx, text, maxWidth);
-  for (const line of lines.slice(0, maxLines)) {
+  for (const line of lines) {
     ctx.fillText(line, x, y);
     y += lineHeight;
   }
 }
 
-function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+function wrapText(
+  ctx: CanvasRenderingContext2D | null,
+  text: string,
+  maxWidth: number,
+  fontSize: number,
+): string[] {
   const lines: string[] = [];
   for (const paragraph of text.split("\n")) {
+    if (!paragraph) {
+      lines.push("");
+      continue;
+    }
+    const tokens = paragraph.match(/[A-Za-z0-9]+(?:[._+/@:-][A-Za-z0-9]+)*|[ \t]+|./gu) || [];
     let line = "";
-    for (const char of Array.from(paragraph)) {
-      const next = line + char;
-      if (ctx.measureText(next).width > maxWidth && line) {
-        lines.push(line);
-        line = char;
+    let pendingSpace = "";
+
+    for (const token of tokens) {
+      if (/^\s+$/.test(token)) {
+        if (line) pendingSpace = " ";
+        continue;
+      }
+      const candidate = `${line}${pendingSpace}${token}`;
+      if (measureTextWidth(ctx, candidate, fontSize) <= maxWidth || !line) {
+        line = candidate;
+        pendingSpace = "";
+        if (measureTextWidth(ctx, line, fontSize) > maxWidth) {
+          const split = splitWideToken(ctx, line, maxWidth, fontSize);
+          lines.push(...split.slice(0, -1));
+          line = split.at(-1) || "";
+        }
+      } else if (isClosingPunctuation(token)) {
+        line += token;
+        pendingSpace = "";
       } else {
-        line = next;
+        let carry = "";
+        const lastChar = Array.from(line).at(-1) || "";
+        if (isOpeningPunctuation(lastChar)) {
+          line = line.slice(0, -lastChar.length);
+          carry = lastChar;
+        }
+        if (line.trim()) lines.push(line.trimEnd());
+        line = `${carry}${token}`;
+        pendingSpace = "";
       }
     }
-    if (line) lines.push(line);
-    else lines.push("");
+    if (line.trim()) lines.push(line.trimEnd());
   }
+  return lines.length > 0 ? lines : [""];
+}
+
+function splitWideToken(
+  ctx: CanvasRenderingContext2D | null,
+  value: string,
+  maxWidth: number,
+  fontSize: number,
+): string[] {
+  const lines: string[] = [];
+  let line = "";
+  for (const char of Array.from(value)) {
+    const candidate = line + char;
+    if (line && measureTextWidth(ctx, candidate, fontSize) > maxWidth) {
+      lines.push(line);
+      line = char;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push(line);
   return lines;
+}
+
+function measureTextWidth(
+  ctx: CanvasRenderingContext2D | null,
+  value: string,
+  fontSize: number,
+): number {
+  if (ctx) return ctx.measureText(value).width;
+  return Array.from(value).reduce((width, char) => {
+    if (/\s/.test(char)) return width + fontSize * 0.28;
+    if (/[\x00-\xff]/.test(char)) return width + fontSize * 0.56;
+    return width + fontSize;
+  }, 0);
+}
+
+function isClosingPunctuation(value: string): boolean {
+  return /^[，。！？；：、）》】」』’”％,.!?;:%)\]}]$/.test(value);
+}
+
+function isOpeningPunctuation(value: string): boolean {
+  return /^[（《【「『‘“([{]$/.test(value);
 }
 
 function countText(text: string): number {

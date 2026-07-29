@@ -257,43 +257,86 @@
   flex: 0 0 216px;
   overflow: hidden;
   border-radius: 7px;
-  background: #fbfaf7;
-  color: #1f2937;
+  background: #faf9f5;
+  color: #141413;
   box-shadow: 0 8px 22px rgb(0 0 0 / 24%);
   scroll-snap-align: start;
 }
 
-.windpost-xhs-card-accent {
+.windpost-xhs-card-mark {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: 6px;
-  border-left: 4px solid #e94b5f;
-  border-right: 2px solid #111827;
+  top: 22px;
+  left: 21px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: Arial, "PingFang SC", sans-serif;
 }
 
-.windpost-xhs-card-text {
-  padding: 24px 20px 34px 26px;
-  white-space: pre-wrap;
-  line-height: 1.55;
+.windpost-xhs-card-mark span {
+  width: 11px;
+  height: 2px;
+  background: #d97757;
+}
+
+.windpost-xhs-card-mark strong {
+  color: #141413;
+  font-size: 6px;
+  font-weight: 600;
 }
 
 .windpost-xhs-card.is-cover .windpost-xhs-card-text {
-  padding-top: 72px;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.windpost-xhs-card.is-content .windpost-xhs-card-text {
-  font-size: 12px;
-}
-
-.windpost-xhs-card-page {
   position: absolute;
-  right: 18px;
+  top: 50%;
+  right: 21px;
+  left: 21px;
+  transform: translateY(-50%);
+  font-family: Arial, "PingFang SC", sans-serif;
+  font-weight: 700;
+  line-height: 1.28;
+  white-space: nowrap;
+}
+
+.windpost-xhs-card-blocks {
+  position: absolute;
+  top: 32px;
+  right: 21px;
+  bottom: 53px;
+  left: 21px;
+  overflow: hidden;
+}
+
+.windpost-xhs-card-blocks p {
+  margin: 0 0 9px;
+  white-space: nowrap;
+}
+
+.windpost-xhs-card-blocks p.is-paragraph {
+  font-family: Georgia, "Songti SC", STSong, serif;
+  font-size: 8.8px;
+  line-height: 14.4px;
+}
+
+.windpost-xhs-card-blocks p.is-emphasis {
+  font-family: Arial, "PingFang SC", sans-serif;
+  font-size: 11.2px;
+  font-weight: 600;
+  line-height: 15.2px;
+}
+
+.windpost-xhs-card-footer {
+  position: absolute;
+  right: 21px;
   bottom: 14px;
-  color: #9ca3af;
-  font-size: 9px;
+  left: 21px;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 10px;
+  border-top: 1px solid #e8e6dc;
+  color: #8f8d85;
+  font-family: Arial, "PingFang SC", sans-serif;
+  font-size: 6px;
+  font-weight: 500;
 }
 
 .windpost-xhs-copy {
@@ -334,8 +377,8 @@
 .windpost-xhs-tags span {
   padding: 3px 7px;
   border-radius: 999px;
-  background: rgb(233 75 95 / 14%);
-  color: #f29aa6;
+  background: rgb(217 119 87 / 16%);
+  color: #e29a80;
   font-size: 11px;
 }
 

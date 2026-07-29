@@ -24,9 +24,39 @@ export function XiaohongshuPreview({ draft }: { draft: XiaohongshuDraft }) {
               className={`windpost-xhs-card is-${card.kind}`}
               key={`${card.kind}-${index}`}
             >
-              <div className="windpost-xhs-card-accent" />
-              <div className="windpost-xhs-card-text">{card.text}</div>
-              <span className="windpost-xhs-card-page">{index + 1}/{draft.cards.length}</span>
+              <div className="windpost-xhs-card-mark">
+                <span />
+                <strong>wind</strong>
+              </div>
+              {card.kind === "cover" ? (
+                <div
+                  className="windpost-xhs-card-text"
+                  style={{ fontSize: `${(card.fontSize || 88) * 0.2}px` }}
+                >
+                  {(card.lines || [card.text]).map((line, lineIndex) => (
+                    <React.Fragment key={lineIndex}>
+                      {line}
+                      {lineIndex < (card.lines || [card.text]).length - 1 && <br />}
+                    </React.Fragment>
+                  ))}
+                </div>
+              ) : (
+                <div className="windpost-xhs-card-blocks">
+                  {(card.blocks || [{ kind: "paragraph" as const, text: card.text }]).map((block, blockIndex) => (
+                    <p className={`is-${block.kind}`} key={`${block.kind}-${blockIndex}`}>
+                      {(block.lines || block.text.split("\n")).map((line, lineIndex) => (
+                        <React.Fragment key={lineIndex}>
+                          {line}
+                          {lineIndex < (block.lines || block.text.split("\n")).length - 1 && <br />}
+                        </React.Fragment>
+                      ))}
+                    </p>
+                  ))}
+                </div>
+              )}
+              <div className="windpost-xhs-card-footer">
+                <span>{pad(index + 1)} / {pad(draft.cards.length)}</span>
+              </div>
             </article>
           ))}
         </div>
@@ -67,4 +97,8 @@ export function XiaohongshuPreview({ draft }: { draft: XiaohongshuDraft }) {
 
 function countText(value: string): number {
   return Array.from(value).length;
+}
+
+function pad(value: number): string {
+  return String(value).padStart(2, "0");
 }
