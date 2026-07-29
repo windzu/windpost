@@ -135,6 +135,30 @@ export class WindPostSettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         }));
 
+    new Setting(containerEl)
+      .setName("连接检查")
+      .setDesc("获取接口凭证并读取草稿总数，不创建或修改草稿。")
+      .addButton((button) => button
+        .setButtonText("测试公众号连接")
+        .onClick(async () => {
+          button.setDisabled(true).setButtonText("检查中…");
+          try {
+            const result = await this.plugin.testWechatConnection();
+            new Notice(`WindPost: 公众号连接正常，当前有 ${result.draftCount} 篇草稿`);
+            button.setButtonText("连接正常");
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            new Notice(`WindPost: ${message}`, 8000);
+            button.setButtonText("检查失败");
+          } finally {
+            button.setDisabled(false);
+          }
+        }));
+
+    new Setting(containerEl)
+      .setName("草稿字段")
+      .setDesc("封面使用 wechat_cover（缺省时取正文首图）；可选字段：wechat_author、wechat_digest、wechat_source_url、wechat_open_comment、wechat_fans_only_comment。");
+
     // ---------- 小红书 ----------
     containerEl.createEl("h3", { text: "小红书" });
 

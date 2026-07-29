@@ -13,6 +13,9 @@ import {
   prepareXiaohongshuDraft,
 } from "./xiaohongshu/export";
 import type { XiaohongshuDraft } from "./xiaohongshu/types";
+import { prepareWechatContent } from "./wechat/prepare";
+import { extractImageSources, replaceImageSources, sourceToAsset } from "./wechat/html";
+import type { WechatPost } from "./wechat/types";
 import type WindPostPlugin from "../main";
 
 interface Props {
@@ -34,6 +37,7 @@ export function App({ plugin }: Props) {
   const [channel, setChannel] = useState<Channel>("blog");
   const [html, setHtml] = useState("");
   const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
+  const [wechatPost, setWechatPost] = useState<WechatPost | null>(null);
   const [xiaohongshuDraft, setXiaohongshuDraft] = useState<XiaohongshuDraft | null>(null);
   const [status, setStatus] = useState<"idle" | "rendering" | "ready" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -74,6 +78,7 @@ export function App({ plugin }: Props) {
     setMessage("");
     setErrorMessage(null);
     setBlogPost(null);
+    setWechatPost(null);
     setXiaohongshuDraft(null);
 
     if (!doc.content) {
@@ -114,15 +119,22 @@ export function App({ plugin }: Props) {
           setBlogPost(post);
           setHtml(nextHtml);
         } else {
+          const prepared = prepareWechatContent({
+            app,
+            sourcePath: doc.path,
+            markdown: doc.content,
+          });
           const nextHtml = await render({
-            markdown: preprocessObsidianWikilinks(doc.content, app, doc.path),
+            markdown: prepared.markdown,
             markdownStyle: settings.defaultMarkdownStyle,
             platform: "wechat",
             enableFootnoteLinks: settings.enableFootnoteLinks,
             openLinksInNewWindow: true,
           });
           if (cancelled) return;
-          setHtml(nextHtml);
+          const { markdown: _markdown, ...metadata } = prepared;
+          setWechatPost({ ...metadata, contentHtml: nextHtml });
+          setHtml(createWechatPreviewHtml(nextHtml, app));
         }
         setStatus("ready");
       } catch (error) {
@@ -199,6 +211,32 @@ export function App({ plugin }: Props) {
     }
   };
 
+  const publishWechat = async () => {
+    if (!wechatPost || publishing) return;
+    const imageCount = (wechatPost.contentHtml.match(/<img\b/gi) || []).length;
+    const confirmed = await confirmPublish(
+      app,
+      "发布至公众号草稿",
+      `将「${wechatPost.title}」及正文中的 ${imageCount} 张图片上传到微信公众号草稿箱。最终群发仍需在公众号后台人工确认。`,
+      "创建草稿",
+    );
+    if (!confirmed) return;
+
+    setPublishing(true);
+    setMessage("正在上传公众号图片并创建草稿…");
+    try {
+      const result = await plugin.publishWechatDraft(wechatPost);
+      setMessage(`公众号草稿已创建，上传 ${result.uploadedImages} 张正文图片。`);
+      new Notice("WindPost: 公众号草稿已创建");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      setMessage(`公众号草稿创建失败：${detail}`);
+      new Notice(`WindPost 公众号草稿创建失败：${detail}`, 10000);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   return (
     <div className="windpost-root">
       <header className="windpost-header">
@@ -214,6 +252,13 @@ export function App({ plugin }: Props) {
           <strong>{blogPost.title}</strong>
           <span>/posts/{blogPost.slug}/</span>
           <span>{blogPost.date}</span>
+        </div>
+      )}
+      {channel === "wechat" && wechatPost && (
+        <div className="windpost-channel-meta">
+          <strong>{wechatPost.title}</strong>
+          <span>{wechatPost.coverSource ? "封面已就绪" : "需要封面"}</span>
+          <span>{(wechatPost.contentHtml.match(/<img\b/gi) || []).length} 张正文图片</span>
         </div>
       )}
       {channel === "xiaohongshu" && xiaohongshuDraft && (
@@ -251,7 +296,14 @@ export function App({ plugin }: Props) {
           </button>
         )}
         {channel === "wechat" && (
-          <button type="button" disabled title="公众号草稿 API 尚未接入">发布至公众号草稿</button>
+          <button
+            type="button"
+            className="mod-cta"
+            disabled={!wechatPost || publishing}
+            onClick={publishWechat}
+          >
+            {publishing ? "正在创建草稿…" : "发布至公众号草稿"}
+          </button>
         )}
         {channel === "xiaohongshu" && (
           <button
@@ -266,4 +318,15 @@ export function App({ plugin }: Props) {
       </footer>
     </div>
   );
+}
+
+function createWechatPreviewHtml(html: string, app: WindPostPlugin["app"]): string {
+  const replacements = new Map<string, string>();
+  for (const source of extractImageSources(html)) {
+    const asset = sourceToAsset(source);
+    if (asset?.kind !== "vault") continue;
+    const file = app.vault.getAbstractFileByPath(asset.path);
+    if (file instanceof TFile) replacements.set(source, app.vault.getResourcePath(file));
+  }
+  return replaceImageSources(html, replacements);
 }

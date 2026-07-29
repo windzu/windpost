@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "test": "node --test tests/xhs-uploader.test.cjs"
+    "test": "tsx --test tests/*.test.cjs tests/*.test.ts"
   },
   "keywords": [
     "obsidian",
@@ -57,6 +57,7 @@
     "esbuild": "0.24.0",
     "obsidian": "latest",
     "tslib": "2.7.0",
+    "tsx": "^4.20.6",
     "typescript": "5.5.4"
   }
 }

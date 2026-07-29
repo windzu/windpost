@@ -5,7 +5,7 @@ import type { PlatformAdapter } from './types'
 import { SKIP, visit } from 'unist-util-visit'
 
 // LaTeX 公式图片渲染服务 URL
-const LATEX_IMAGE_BASE = 'https://latex.codecogs.com/svg.image?'
+const LATEX_IMAGE_BASE = 'https://latex.codecogs.com/png.image?'
 
 interface FootnoteLink {
   id: number
