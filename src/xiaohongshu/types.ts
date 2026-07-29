@@ -1,6 +1,15 @@
+export interface XiaohongshuCardBlock {
+  kind: "paragraph" | "emphasis";
+  text: string;
+  lines?: string[];
+}
+
 export interface XiaohongshuCard {
   kind: "cover" | "content";
   text: string;
+  blocks?: XiaohongshuCardBlock[];
+  lines?: string[];
+  fontSize?: number;
 }
 
 export interface XiaohongshuDraft {
