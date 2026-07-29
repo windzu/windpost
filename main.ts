@@ -20,6 +20,13 @@ import type {
   XiaohongshuPost,
   XiaohongshuPublishPayload,
 } from "./src/xiaohongshu/types";
+import { WechatApiClient } from "./src/wechat/api";
+import { publishWechatDraft } from "./src/wechat/publish";
+import type {
+  WechatConnectionResult,
+  WechatDraftResult,
+  WechatPost,
+} from "./src/wechat/types";
 
 const XIAOHONGSHU_READY = "__WINDPOST_XHS_READY__";
 const XIAOHONGSHU_LOGIN = "__WINDPOST_XHS_LOGIN__";
@@ -101,6 +108,19 @@ export default class WindPostPlugin extends Plugin {
     });
   }
 
+  async testWechatConnection(): Promise<WechatConnectionResult> {
+    const client = this.getWechatClient();
+    return { draftCount: await client.getDraftCount() };
+  }
+
+  async publishWechatDraft(post: WechatPost): Promise<WechatDraftResult> {
+    return publishWechatDraft({
+      app: this.app,
+      client: this.getWechatClient(),
+      post,
+    });
+  }
+
   async fillXiaohongshuDraft(post: XiaohongshuPost): Promise<XiaohongshuLaunchResult> {
     if (this.xiaohongshuProcesses.size > 0) {
       throw new Error("已有小红书填写任务正在运行，请先关闭上一次打开的专用 Chrome。");
@@ -175,6 +195,14 @@ export default class WindPostPlugin extends Plugin {
       throw new Error("小红书自动填写仅支持本地桌面 vault。");
     }
     return path.join(basePath, this.manifest.dir);
+  }
+
+  private getWechatClient(): WechatApiClient {
+    const appId = this.settings.wechatAppId.trim();
+    if (!appId) throw new Error("请先在 WindPost 设置中配置微信公众号 AppID。");
+    const secret = this.app.secretStorage.getSecret(this.settings.wechatAppSecretName);
+    if (!secret) throw new Error("请先在 WindPost 设置中配置微信公众号 AppSecret。");
+    return new WechatApiClient(appId, secret);
   }
 }
 

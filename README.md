@@ -138,6 +138,16 @@ WindScroll，私人 vault 也不会进入公开仓库。
 - 小红书已支持从公共标题、正文、`cover_text` 和 `tags` 生成 3:4 图文卡片并执行发布前检查；
 - 小红书已接入持久化登录浏览器，可以自动上传卡片并填写标题、正文和标签；
 - 小红书最终发布保留人工确认，不由 WindPost 自动点击；
-- 公众号草稿 API 尚未接入。
+- 公众号已接入官方草稿 API：自动上传正文图片、创建永久封面素材并提交草稿；
+- 公众号最终群发保留人工确认，不由 WindPost 自动执行。
 
-下一步是在真实小红书页面变化中持续收敛选择器和错误提示，再完成公众号草稿发布。
+公众号可在 Properties 中使用以下可选字段：
+
+- `wechat_cover`：本地图片 wikilink、vault 路径或公开图片 URL；未设置时使用正文首图；
+- `wechat_author`、`wechat_digest`、`wechat_source_url`：作者、摘要和「阅读原文」地址；
+- `wechat_open_comment`、`wechat_fans_only_comment`：评论开关。
+
+使用前需要在 WindPost 设置中选择 AppSecret、填写 AppID，并在公众号后台把当前公网
+IP 加入接口白名单。设置页的「测试公众号连接」只读取草稿数量，不会修改线上内容。
+
+下一步是在真实平台页面和账号权限差异中持续收敛错误提示与发布体验。
