@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   extractImageSources,
   isWechatHostedImage,
+  normalizeWechatCoverReference,
   replaceImageSources,
   sourceToAsset,
 } from "../src/wechat/html";
@@ -38,4 +39,10 @@ test("sourceToAsset resolves WindPost vault URLs", () => {
 test("isWechatHostedImage only accepts the WeChat image host", () => {
   assert.equal(isWechatHostedImage("https://mmbiz.qpic.cn/a"), true);
   assert.equal(isWechatHostedImage("https://evil-mmbiz.qpic.cn/a"), false);
+});
+
+test("normalizeWechatCoverReference accepts wikilinks and embedded wikilinks", () => {
+  assert.equal(normalizeWechatCoverReference("[[assets/cover.png]]"), "assets/cover.png");
+  assert.equal(normalizeWechatCoverReference("![[assets/cover.png|封面]]"), "assets/cover.png");
+  assert.equal(normalizeWechatCoverReference("https://example.com/cover.png"), "https://example.com/cover.png");
 });

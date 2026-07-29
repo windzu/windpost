@@ -7,9 +7,6 @@ export interface WindPostSettings {
   githubBranch: string;
   githubTokenSecret: string;
 
-  wechatAppId: string;
-  wechatAppSecretName: string;
-
   xiaohongshuMaxImages: number;
   xiaohongshuPublishUrl: string;
 
@@ -23,8 +20,6 @@ export const DEFAULT_SETTINGS: WindPostSettings = {
   githubRepo: "windscroll",
   githubBranch: "main",
   githubTokenSecret: "",
-  wechatAppId: "",
-  wechatAppSecretName: "",
   xiaohongshuMaxImages: 9,
   xiaohongshuPublishUrl: "https://creator.xiaohongshu.com/publish/publish?source=official",
   defaultMarkdownStyle: "anthropic",
@@ -113,42 +108,23 @@ export class WindPostSettingTab extends PluginSettingTab {
     containerEl.createEl("h3", { text: "微信公众号" });
 
     new Setting(containerEl)
-      .setName("AppID")
-      .setDesc("公众号后台「开发 > 基本配置」中的 AppID")
-      .addText((text) =>
-        text
-          .setPlaceholder("wx...")
-          .setValue(this.plugin.settings.wechatAppId)
-          .onChange(async (value) => {
-            this.plugin.settings.wechatAppId = value.trim();
-            await this.plugin.saveSettings();
-          }),
-      );
+      .setName("登录方式")
+      .setDesc("使用独立 Chrome 保存公众号后台登录态；首次创建草稿时按提示扫码登录，不需要 AppID、AppSecret 或 IP 白名单。");
 
     new Setting(containerEl)
-      .setName("AppSecret")
-      .setDesc("保存在 Obsidian SecretStorage，不写入插件 data.json。")
-      .addComponent((el) => new SecretComponent(this.app, el)
-        .setValue(this.plugin.settings.wechatAppSecretName)
-        .onChange(async (value) => {
-          this.plugin.settings.wechatAppSecretName = value;
-          await this.plugin.saveSettings();
-        }));
-
-    new Setting(containerEl)
-      .setName("连接检查")
-      .setDesc("获取接口凭证并读取草稿总数，不创建或修改草稿。")
+      .setName("登录检查")
+      .setDesc("打开公众号专用 Chrome；未登录时扫码，已登录时只验证会话，不创建草稿。")
       .addButton((button) => button
-        .setButtonText("测试公众号连接")
+        .setButtonText("登录/检查")
         .onClick(async () => {
           button.setDisabled(true).setButtonText("检查中…");
           try {
-            const result = await this.plugin.testWechatConnection();
-            new Notice(`WindPost: 公众号连接正常，当前有 ${result.draftCount} 篇草稿`);
-            button.setButtonText("连接正常");
+            await this.plugin.connectWechat();
+            new Notice("WindPost: 公众号登录会话有效");
+            button.setButtonText("登录正常");
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            new Notice(`WindPost: ${message}`, 8000);
+            new Notice(`WindPost: ${message}`, 10000);
             button.setButtonText("检查失败");
           } finally {
             button.setDisabled(false);

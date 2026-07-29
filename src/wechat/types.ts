@@ -19,7 +19,14 @@ export interface WechatDraftResult {
   uploadedImages: number;
 }
 
-export interface WechatConnectionResult {
-  draftCount: number;
+export interface WechatBrowserImage {
+  source: string;
+  path: string;
 }
 
+export interface WechatBrowserPayload extends WechatPost {
+  images: WechatBrowserImage[];
+  coverPath: string;
+  outputDir: string;
+  userDataDir: string;
+}

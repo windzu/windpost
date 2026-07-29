@@ -49,6 +49,12 @@ export function isWechatHostedImage(source: string): boolean {
   }
 }
 
+export function normalizeWechatCoverReference(value: string): string {
+  const trimmed = value.trim();
+  const wikilink = trimmed.match(/^!?\[\[([\s\S]+)\]\]$/);
+  return (wikilink ? wikilink[1] : trimmed).split("|")[0].trim();
+}
+
 function decodeHtmlAttribute(value: string): string {
   return value
     .replace(/&quot;/g, "\"")
@@ -62,4 +68,3 @@ function escapeHtmlAttribute(value: string): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
-

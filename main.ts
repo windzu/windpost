@@ -20,20 +20,23 @@ import type {
   XiaohongshuPost,
   XiaohongshuPublishPayload,
 } from "./src/xiaohongshu/types";
-import { WechatApiClient } from "./src/wechat/api";
-import { publishWechatDraft } from "./src/wechat/publish";
+import { exportWechatBrowserPayload } from "./src/wechat/publish";
 import type {
-  WechatConnectionResult,
+  WechatBrowserPayload,
   WechatDraftResult,
   WechatPost,
 } from "./src/wechat/types";
 
 const XIAOHONGSHU_READY = "__WINDPOST_XHS_READY__";
 const XIAOHONGSHU_LOGIN = "__WINDPOST_XHS_LOGIN__";
+const WECHAT_READY = "__WINDPOST_WECHAT_READY__";
+const WECHAT_LOGIN = "__WINDPOST_WECHAT_LOGIN__";
+const WECHAT_CONNECTED = "__WINDPOST_WECHAT_CONNECTED__";
 
 export default class WindPostPlugin extends Plugin {
   settings!: WindPostSettings;
   private xiaohongshuProcesses = new Set<ChildProcessWithoutNullStreams>();
+  private wechatProcesses = new Set<ChildProcessWithoutNullStreams>();
 
   async onload() {
     await this.loadSettings();
@@ -56,6 +59,8 @@ export default class WindPostPlugin extends Plugin {
   async onunload() {
     for (const child of this.xiaohongshuProcesses) child.kill();
     this.xiaohongshuProcesses.clear();
+    for (const child of this.wechatProcesses) child.kill();
+    this.wechatProcesses.clear();
   }
 
   async loadSettings() {
@@ -108,16 +113,120 @@ export default class WindPostPlugin extends Plugin {
     });
   }
 
-  async testWechatConnection(): Promise<WechatConnectionResult> {
-    const client = this.getWechatClient();
-    return { draftCount: await client.getDraftCount() };
+  async publishWechatDraft(post: WechatPost): Promise<WechatDraftResult> {
+    if (this.wechatProcesses.size > 0) {
+      throw new Error("已有公众号草稿任务正在运行，请先关闭上一次打开的专用 Chrome。");
+    }
+
+    const pluginDir = this.getPluginDirectory();
+    const publisherPath = path.join(pluginDir, "wechat-publisher.cjs");
+    await access(publisherPath);
+    const exported = await exportWechatBrowserPayload({
+      app: this.app,
+      post,
+      sourcePath: this.app.workspace.getActiveFile()?.path || "untitled.md",
+    });
+    const payload: WechatBrowserPayload = {
+      ...exported,
+      userDataDir: path.join(pluginDir, ".windpost-browser", "wechat"),
+    };
+    const payloadPath = path.join(payload.outputDir, "payload.json");
+    await writeFile(payloadPath, JSON.stringify(payload, null, 2), "utf8");
+
+    return new Promise((resolve, reject) => {
+      const child = spawn(
+        "/bin/zsh",
+        ["-lc", 'exec node "$1" "$2"', "windpost-wechat", publisherPath, payloadPath],
+        {
+          cwd: pluginDir,
+          env: process.env,
+        },
+      );
+      this.wechatProcesses.add(child);
+
+      let stdout = "";
+      let stderr = "";
+      let settled = false;
+      let loginNotified = false;
+
+      const fail = (error: Error) => {
+        if (settled) return;
+        settled = true;
+        reject(error);
+      };
+
+      child.stdout.on("data", (chunk: Buffer) => {
+        stdout += chunk.toString("utf8");
+        if (!loginNotified && stdout.includes(WECHAT_LOGIN)) {
+          loginNotified = true;
+          new Notice("WindPost: 请在浏览器中扫码登录微信公众号后台。", 12000);
+        }
+        const readyLine = stdout.split(/\r?\n/).find((line) => line.startsWith(WECHAT_READY));
+        if (!settled && readyLine) {
+          const match = readyLine.match(/^__WINDPOST_WECHAT_READY__\s+(\S+)\s+(\d+)/);
+          if (!match) {
+            fail(new Error("公众号发布进程返回了无效结果。"));
+            return;
+          }
+          settled = true;
+          resolve({ mediaId: match[1], uploadedImages: Number(match[2]) });
+        }
+      });
+      child.stderr.on("data", (chunk: Buffer) => {
+        stderr += chunk.toString("utf8");
+      });
+      child.once("error", (error) => fail(error));
+      child.once("exit", (code, signal) => {
+        this.wechatProcesses.delete(child);
+        if (settled) return;
+        const detail = tail(stderr || stdout);
+        const exitReason = code !== null ? `退出码 ${code}` : `信号 ${signal || "unknown"}`;
+        fail(new Error(detail || `公众号发布进程已退出（${exitReason}）。`));
+      });
+    });
   }
 
-  async publishWechatDraft(post: WechatPost): Promise<WechatDraftResult> {
-    return publishWechatDraft({
-      app: this.app,
-      client: this.getWechatClient(),
-      post,
+  async connectWechat(): Promise<void> {
+    if (this.wechatProcesses.size > 0) {
+      throw new Error("已有公众号任务正在运行，请先关闭上一次打开的专用 Chrome。");
+    }
+    const pluginDir = this.getPluginDirectory();
+    const publisherPath = path.join(pluginDir, "wechat-publisher.cjs");
+    await access(publisherPath);
+    const userDataDir = path.join(pluginDir, ".windpost-browser", "wechat");
+
+    return new Promise((resolve, reject) => {
+      const child = spawn(
+        "/bin/zsh",
+        ["-lc", 'exec node "$1" --login "$2"', "windpost-wechat-login", publisherPath, userDataDir],
+        { cwd: pluginDir, env: process.env },
+      );
+      this.wechatProcesses.add(child);
+      let stdout = "";
+      let stderr = "";
+      let loginNotified = false;
+
+      child.stdout.on("data", (chunk: Buffer) => {
+        stdout += chunk.toString("utf8");
+        if (!loginNotified && stdout.includes(WECHAT_LOGIN)) {
+          loginNotified = true;
+          new Notice("WindPost: 请在浏览器中扫码登录微信公众号后台。", 12000);
+        }
+      });
+      child.stderr.on("data", (chunk: Buffer) => {
+        stderr += chunk.toString("utf8");
+      });
+      child.once("error", reject);
+      child.once("exit", (code, signal) => {
+        this.wechatProcesses.delete(child);
+        if (code === 0 && stdout.includes(WECHAT_CONNECTED)) {
+          resolve();
+          return;
+        }
+        const detail = tail(stderr || stdout);
+        const exitReason = code !== null ? `退出码 ${code}` : `信号 ${signal || "unknown"}`;
+        reject(new Error(detail || `公众号登录检查已退出（${exitReason}）。`));
+      });
     });
   }
 
@@ -197,13 +306,6 @@ export default class WindPostPlugin extends Plugin {
     return path.join(basePath, this.manifest.dir);
   }
 
-  private getWechatClient(): WechatApiClient {
-    const appId = this.settings.wechatAppId.trim();
-    if (!appId) throw new Error("请先在 WindPost 设置中配置微信公众号 AppID。");
-    const secret = this.app.secretStorage.getSecret(this.settings.wechatAppSecretName);
-    if (!secret) throw new Error("请先在 WindPost 设置中配置微信公众号 AppSecret。");
-    return new WechatApiClient(appId, secret);
-  }
 }
 
 function tail(value: string, max = 1200): string {
