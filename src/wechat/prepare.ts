@@ -1,6 +1,7 @@
 import * as path from "node:path";
 import { normalizePath, type App, type TFile } from "obsidian";
 import YAML from "yaml";
+import { normalizeWechatCoverReference } from "./html";
 import type { WechatAssetSource, WechatPost } from "./types";
 
 interface PreparedWechatContent extends Omit<WechatPost, "contentHtml"> {
@@ -111,7 +112,7 @@ function findImages(markdown: string): ImageRef[] {
 }
 
 function resolveCover(app: App, sourcePath: string, value: string): WechatAssetSource {
-  const normalized = value.trim().replace(/^!\[\[|\]\]$/g, "").split("|")[0].trim();
+  const normalized = normalizeWechatCoverReference(value);
   if (/^https?:\/\//i.test(normalized)) return { kind: "url", url: normalized };
   if (normalized.startsWith("data:")) return { kind: "data", dataUrl: normalized };
   const file = app.metadataCache.getFirstLinkpathDest(safeDecode(normalized), sourcePath);

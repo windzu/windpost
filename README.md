@@ -133,12 +133,12 @@ WindScroll，私人 vault 也不会进入公开仓库。
 - 发布中心已拆分为 Blog、公众号和小红书三个独立渠道；
 - Blog 预览不会修改 WindScroll 或其他外部状态；
 - 用户确认后，Blog 文章与附件通过 GitHub Git Database API组成一个 commit；
-- GitHub Token 和公众号 AppSecret 使用 Obsidian SecretStorage 保存；
+- GitHub Token 使用 Obsidian SecretStorage 保存；
 - WindScroll 已支持 Notion 与 WindPost 文章并存，同 slug 时使用 WindPost 版本；
 - 小红书已支持从公共标题、正文、`cover_text` 和 `tags` 生成 3:4 图文卡片并执行发布前检查；
 - 小红书已接入持久化登录浏览器，可以自动上传卡片并填写标题、正文和标签；
 - 小红书最终发布保留人工确认，不由 WindPost 自动点击；
-- 公众号已接入官方草稿 API：自动上传正文图片、创建永久封面素材并提交草稿；
+- 公众号已接入持久化登录浏览器：自动上传正文图片和封面并创建草稿；
 - 公众号最终群发保留人工确认，不由 WindPost 自动执行。
 
 公众号可在 Properties 中使用以下可选字段：
@@ -147,7 +147,9 @@ WindScroll，私人 vault 也不会进入公开仓库。
 - `wechat_author`、`wechat_digest`、`wechat_source_url`：作者、摘要和「阅读原文」地址；
 - `wechat_open_comment`、`wechat_fans_only_comment`：评论开关。
 
-使用前需要在 WindPost 设置中选择 AppSecret、填写 AppID，并在公众号后台把当前公网
-IP 加入接口白名单。设置页的「测试公众号连接」只读取草稿数量，不会修改线上内容。
+首次创建公众号草稿时，WindPost 会打开独立 Chrome，扫码登录后把登录态保存在插件
+目录的 `.windpost-browser/wechat` 中。后续发布复用该会话，不需要 AppID、AppSecret
+或公网 IP 白名单。WindPost 使用公众号后台的浏览器接口，因此微信后台页面或接口
+变化后可能需要更新适配。
 
 下一步是在真实平台页面和账号权限差异中持续收敛错误提示与发布体验。
