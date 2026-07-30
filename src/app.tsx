@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Notice, TFile } from "obsidian";
 import { render } from "./markdown/render/html";
 import { preprocessObsidianWikilinks } from "./markdown/preprocess/wikilinks";
@@ -15,6 +15,12 @@ import {
 import type { XiaohongshuDraft } from "./xiaohongshu/types";
 import { prepareWechatContent } from "./wechat/prepare";
 import { extractImageSources, replaceImageSources, sourceToAsset } from "./wechat/html";
+import {
+  DEFAULT_WECHAT_TEMPLATE_ID,
+  discoverWechatTemplates,
+  getBuiltinWechatTemplates,
+  type WechatTemplate,
+} from "./wechat/templates";
 import type { WechatPost } from "./wechat/types";
 import type WindPostPlugin from "../main";
 
@@ -39,10 +45,39 @@ export function App({ plugin }: Props) {
   const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
   const [wechatPost, setWechatPost] = useState<WechatPost | null>(null);
   const [xiaohongshuDraft, setXiaohongshuDraft] = useState<XiaohongshuDraft | null>(null);
+  const [wechatTemplates, setWechatTemplates] = useState<WechatTemplate[]>(
+    getBuiltinWechatTemplates,
+  );
+  const [wechatTemplateId, setWechatTemplateId] = useState(
+    settings.wechatTemplateId || DEFAULT_WECHAT_TEMPLATE_ID,
+  );
   const [status, setStatus] = useState<"idle" | "rendering" | "ready" | "error">("idle");
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
+
+  const refreshWechatTemplates = useCallback(async (showNotice = false) => {
+    const discovery = await discoverWechatTemplates(app);
+    setWechatTemplates(discovery.templates);
+    setWechatTemplateId((current) => (
+      discovery.templates.some((template) => template.id === current)
+        ? current
+        : DEFAULT_WECHAT_TEMPLATE_ID
+    ));
+    if (discovery.errors.length > 0) {
+      console.warn("WindPost: 自定义公众号模板加载失败", discovery.errors);
+      if (showNotice) {
+        new Notice(`WindPost: ${discovery.errors.length} 个公众号模板未通过校验`, 8000);
+      }
+    } else if (showNotice) {
+      const customCount = discovery.templates.filter((template) => template.source === "custom").length;
+      new Notice(`WindPost: 已加载 ${customCount} 个自定义公众号模板`);
+    }
+  }, [app]);
+
+  useEffect(() => {
+    void refreshWechatTemplates();
+  }, [refreshWechatTemplates]);
 
   useEffect(() => {
     const refresh = () => {
@@ -124,9 +159,11 @@ export function App({ plugin }: Props) {
             sourcePath: doc.path,
             markdown: doc.content,
           });
+          const template = wechatTemplates.find((item) => item.id === wechatTemplateId)
+            || wechatTemplates[0];
           const nextHtml = await render({
             markdown: prepared.markdown,
-            markdownStyle: settings.defaultMarkdownStyle,
+            customCss: template?.css || "",
             platform: "wechat",
             enableFootnoteLinks: settings.enableFootnoteLinks,
             openLinksInNewWindow: true,
@@ -151,7 +188,17 @@ export function App({ plugin }: Props) {
     settings.defaultMarkdownStyle,
     settings.enableFootnoteLinks,
     settings.xiaohongshuMaxImages,
+    wechatTemplateId,
+    wechatTemplates,
   ]);
+
+  const selectWechatTemplate = (id: string) => {
+    setWechatPost(null);
+    setStatus("rendering");
+    setWechatTemplateId(id);
+    plugin.settings.wechatTemplateId = id;
+    void plugin.saveSettings();
+  };
 
   const publishBlog = async () => {
     if (!blogPost || publishing) return;
@@ -254,11 +301,39 @@ export function App({ plugin }: Props) {
           <span>{blogPost.date}</span>
         </div>
       )}
-      {channel === "wechat" && wechatPost && (
+      {channel === "wechat" && (
         <div className="windpost-channel-meta">
-          <strong>{wechatPost.title}</strong>
-          <span>{wechatPost.coverSource ? "封面已就绪" : "需要封面"}</span>
-          <span>{(wechatPost.contentHtml.match(/<img\b/gi) || []).length} 张正文图片</span>
+          {wechatPost ? (
+            <>
+              <strong>{wechatPost.title}</strong>
+              <span>{wechatPost.coverSource ? "封面已就绪" : "需要封面"}</span>
+              <span>{(wechatPost.contentHtml.match(/<img\b/gi) || []).length} 张正文图片</span>
+            </>
+          ) : (
+            <strong>公众号排版</strong>
+          )}
+          <label className="windpost-template-select">
+            <span>模板</span>
+            <select
+              value={wechatTemplateId}
+              onChange={(event) => selectWechatTemplate(event.target.value)}
+              aria-label="公众号排版模板"
+            >
+              {wechatTemplates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.name}{template.source === "builtin" ? "（内置）" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            className="windpost-template-refresh"
+            title="重新扫描自定义公众号模板"
+            onClick={() => void refreshWechatTemplates(true)}
+          >
+            刷新
+          </button>
         </div>
       )}
       {channel === "xiaohongshu" && xiaohongshuDraft && (

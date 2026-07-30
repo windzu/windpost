@@ -152,4 +152,10 @@ WindScroll，私人 vault 也不会进入公开仓库。
 或公网 IP 白名单。WindPost 使用公众号后台的浏览器接口，因此微信后台页面或接口
 变化后可能需要更新适配。
 
+公众号排版内置 `Anthropic` 和 `Her` 两个模板，可在公众号预览区直接切换。自定义
+模板由 Agent 按 [公众号模板规范](docs/WECHAT_TEMPLATE_SPEC.md) 创建，并放到 Vault
+的 `WindPost/Templates/WeChat/<template-id>/`。WindPost 只负责扫描、校验和使用，
+不提供模板编辑器；模板创建 Skill 位于
+[`skills/create-windpost-wechat-template`](skills/create-windpost-wechat-template/)。
+
 下一步是在真实平台页面和账号权限差异中持续收敛错误提示与发布体验。
