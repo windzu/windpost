@@ -1,0 +1,294 @@
+/* ============================================
+   Her
+
+   抽象自用户提供的编辑排版参考：
+   暖白纸张、蓝灰正文、深靛蓝标题、钴蓝强调，
+   以克制的边线和宽松的中文行距建立阅读节奏。
+   ============================================ */
+
+#bm-md {
+  color: #555a64;
+  background-color: #fcfaf5;
+  font-family: 'PingFang SC', 'Hiragino Sans GB', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15.5px;
+  font-weight: 300;
+  line-height: 2.05;
+  letter-spacing: 0.65px;
+  padding: 24px 28px 52px;
+  text-align: justify;
+}
+
+#bm-md h1,
+#bm-md h2,
+#bm-md h3,
+#bm-md h4,
+#bm-md h5,
+#bm-md h6 {
+  color: #25345e;
+  font-family: 'PingFang SC', 'Hiragino Sans GB', -apple-system, BlinkMacSystemFont, sans-serif;
+  text-align: left;
+}
+
+#bm-md h1 {
+  margin-top: 0.9em;
+  margin-bottom: 1.5em;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.55;
+  letter-spacing: 1.5px;
+  text-align: center;
+}
+
+#bm-md h1::after {
+  content: '';
+  display: block;
+  width: 42px;
+  height: 2px;
+  margin: 18px auto 0;
+  background-color: #3156b4;
+}
+
+#bm-md h2 {
+  margin-top: 2.7em;
+  margin-bottom: 1.45em;
+  padding-top: 0.65em;
+  padding-bottom: 0.7em;
+  border-bottom: 1px solid rgba(49, 86, 180, 0.22);
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 1px;
+}
+
+#bm-md h2::before {
+  content: '';
+  display: block;
+  width: 58px;
+  height: 3px;
+  margin-bottom: 12px;
+  background-color: #3156b4;
+}
+
+#bm-md h3 {
+  margin-top: 2.1em;
+  margin-bottom: 1em;
+  padding-left: 12px;
+  border-left: 3px solid #3156b4;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: 0.8px;
+}
+
+#bm-md h4 {
+  margin-top: 1.8em;
+  margin-bottom: 0.8em;
+  font-family: 'Songti SC', STSong, SimSun, serif;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+#bm-md h5,
+#bm-md h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.7em;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+#bm-md p {
+  margin-bottom: 18px;
+  color: #555a64;
+  font-size: 15.5px;
+  font-weight: 300;
+  line-height: 2.05;
+  letter-spacing: 0.65px;
+  text-align: justify;
+}
+
+#bm-md p:last-child {
+  margin-bottom: 0;
+}
+
+#bm-md strong,
+#bm-md b {
+  color: #454a53;
+  font-weight: 600;
+}
+
+#bm-md em,
+#bm-md i {
+  color: #666b74;
+  font-family: Georgia, 'Times New Roman', 'Songti SC', serif;
+  font-style: italic;
+  font-weight: 300;
+}
+
+#bm-md mark {
+  color: #25345e;
+  background-color: #e8ebf2;
+  padding: 0.08em 0.24em;
+}
+
+#bm-md a {
+  color: #3156b4;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(49, 86, 180, 0.35);
+}
+
+#bm-md blockquote {
+  margin: 26px 0;
+  padding: 18px 20px;
+  color: #59646a;
+  background-color: #f3f5f5;
+  border-left: 3px solid #435b9d;
+}
+
+#bm-md blockquote p {
+  margin-bottom: 0;
+  color: #59646a;
+  line-height: 1.8;
+}
+
+#bm-md ul,
+#bm-md ol {
+  margin: 24px 0 30px;
+  padding: 22px 22px 12px 42px;
+  background-color: #f1ede4;
+  border-radius: 2px;
+}
+
+#bm-md li {
+  margin-bottom: 14px;
+  padding-left: 4px;
+  color: #454a53;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+#bm-md li::marker {
+  color: #3156b4;
+}
+
+#bm-md li > ul,
+#bm-md li > ol {
+  margin-top: 10px;
+  margin-bottom: 4px;
+  padding-top: 12px;
+  padding-bottom: 2px;
+  background-color: rgba(252, 250, 245, 0.66);
+}
+
+#bm-md figure {
+  margin: 34px -12px 38px;
+}
+
+#bm-md figure img,
+#bm-md > img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+#bm-md figcaption {
+  margin-top: 10px;
+  color: #9aa2a5;
+  font-family: Georgia, serif;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 1.4px;
+  text-align: center;
+}
+
+#bm-md hr {
+  width: 58px;
+  height: 3px;
+  margin: 42px auto;
+  border: 0;
+  background-color: #3156b4;
+}
+
+#bm-md pre {
+  margin: 26px 0;
+  padding: 18px 20px;
+  overflow-x: auto;
+  color: #dfe5e8;
+  background-color: #25345e;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+#bm-md code {
+  color: #25345e;
+  background-color: #e8ebf2;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 0.88em;
+  padding: 0.12em 0.32em;
+}
+
+#bm-md pre code {
+  color: inherit;
+  background-color: transparent;
+  padding: 0;
+}
+
+#bm-md table {
+  width: 100%;
+  margin: 28px 0;
+  border-collapse: collapse;
+  color: #555a64;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+#bm-md th,
+#bm-md td {
+  padding: 10px 9px;
+  border: 1px solid #d8d9dc;
+  text-align: left;
+}
+
+#bm-md th {
+  color: #25345e;
+  background-color: #e8ebf2;
+  font-weight: 600;
+}
+
+#bm-md tr:nth-child(even) td {
+  background-color: #f6f4ef;
+}
+
+#bm-md .markdown-alert {
+  margin: 26px 0;
+  padding: 18px 20px;
+  color: #555a64;
+  background-color: #f3f2ee;
+  border: 1px solid #d8d9dc;
+  border-left: 3px solid #3156b4;
+}
+
+#bm-md .markdown-alert-title {
+  margin-bottom: 8px;
+  color: #25345e;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+#bm-md .katex-display,
+#bm-md .math-display {
+  margin: 28px 0;
+  padding: 16px 12px;
+  overflow-x: auto;
+  background-color: #f3f2ee;
+}
+
+#bm-md section[data-footnotes] {
+  margin-top: 42px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(49, 86, 180, 0.22);
+  color: #888d96;
+  font-size: 13px;
+}
