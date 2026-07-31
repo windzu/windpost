@@ -1,6 +1,6 @@
 filters:
   and:
-    - file.folder == "Content"
+    - file.folder == "WindPost"
 properties:
   note.stage:
     displayName: 阶段

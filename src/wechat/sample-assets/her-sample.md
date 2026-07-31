@@ -25,7 +25,7 @@ published_to: []
 
 > 「现在，我终于可以直面那段狼狈的日子，把它写下来。」
 
-![雨中的人生岔路](WindPost/Examples/Her/assets/her-crossroads.jpg)
+![雨中的人生岔路](WindPost/Attachments/Her/her-crossroads.jpg)
 
 *本图由AI生成*
 
@@ -55,7 +55,7 @@ published_to: []
 
 那段时间的我真的特别敏感，也特别在意别人怎么看我。不能只靠一份不稳定的书法工作活着，别人问起来，我又该怎么讲？我总觉得自己和周围人的差距很大。我尝试做冥想，做一些让自己开心的事情，可每天从睁眼到闭眼，脑子里还是这些消极的想法。非常长的一段时间里，它们多到快要吞噬我。那时候我明明是一个很爱美的女生，可压力一大，我连平静地呼吸都做不到，爆痘也非常严重，容貌焦虑越来越重。后来我不画画了，也不怎么运动，不和别人联系，不化妆，也不想出去玩。睡眠也极度糟糕，晚上经常哭到睡着。
 
-![雨中带着提琴的女孩](WindPost/Examples/Her/assets/her-violinist.jpg)
+![雨中带着提琴的女孩](WindPost/Attachments/Her/her-violinist.jpg)
 
 *本图由AI生成*
 
@@ -111,7 +111,7 @@ published_to: []
 
 > 「我才发现，世界原来可以这么有意思。」
 
-![今年年初的生活照片](WindPost/Examples/Her/assets/her-new-year.jpg "windpost:crop=7/5;position=50% 48%")
+![今年年初的生活照片](WindPost/Attachments/Her/her-new-year.jpg "windpost:crop=7/5;position=50% 48%")
 
 *今年年初，状态好了很多*
 
@@ -185,7 +185,7 @@ published_to: []
 
 我们一起读书，也一起看看，未来还有哪些可能。
 
-![和男友一起的海边](WindPost/Examples/Her/assets/her-beach.jpg "windpost:crop=3/2;position=50% 38%")
+![和男友一起的海边](WindPost/Attachments/Her/her-beach.jpg "windpost:crop=3/2;position=50% 38%")
 
 *和男友一起的海边。脚踩上沙子，什么都可以忘记。*
 
