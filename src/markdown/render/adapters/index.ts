@@ -1,11 +1,14 @@
 import type { Pluggable } from 'unified'
 import type { AdapterOptions, Platform, PlatformAdapter } from './types'
+import rehypeWindpostStructure from '../plugins/rehype-windpost-structure'
 import { wechatAdapter } from './wechat'
 
 const htmlAdapter: PlatformAdapter = {
   id: 'html',
   name: 'HTML',
-  getPlugins: () => [],
+  getPlugins: () => [
+    [rehypeWindpostStructure, { variant: 'default' }],
+  ],
 }
 
 const adapters: Record<Platform, PlatformAdapter> = {

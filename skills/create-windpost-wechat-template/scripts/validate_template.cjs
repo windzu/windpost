@@ -33,6 +33,13 @@ function validateTemplateFiles(manifestText, css) {
     ) {
       errors.push("description 必须为 1–160 个字符。");
     }
+    if (
+      manifest.layout !== undefined
+      && manifest.layout !== "default"
+      && manifest.layout !== "editorial"
+    ) {
+      errors.push("layout 只能是 default 或 editorial。");
+    }
   }
 
   if (typeof css !== "string" || !css.trim()) {

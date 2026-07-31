@@ -39,6 +39,58 @@ function createFigcaption(text: string): Element {
   }
 }
 
+function onlyElement(node: Element, tagName: string): Element | null {
+  const children = node.children.filter(child => (
+    child.type !== 'text' || child.value.trim().length > 0
+  ))
+  if (children.length !== 1) return null
+  const child = children[0]
+  return child.type === 'element' && child.tagName === tagName ? child : null
+}
+
+function normalizeFigures(parent: Root | Element) {
+  for (let index = 0; index < parent.children.length; index += 1) {
+    const child = parent.children[index]
+    if (child.type !== 'element') continue
+
+    if (child.tagName === 'p') {
+      const figure = onlyElement(child, 'figure')
+      if (figure) {
+        let nextIndex = index + 1
+        while (nextIndex < parent.children.length) {
+          const separator = parent.children[nextIndex]
+          if (separator.type !== 'text' || separator.value.trim().length > 0) break
+          nextIndex += 1
+        }
+        const next = parent.children[nextIndex]
+        const captionEm = next?.type === 'element' && next.tagName === 'p'
+          ? onlyElement(next, 'em')
+          : null
+        if (captionEm) {
+          const caption = figure.children.find((item): item is Element => (
+            item.type === 'element' && item.tagName === 'figcaption'
+          ))
+          if (caption) caption.children = captionEm.children
+          else {
+            figure.children.push({
+              type: 'element',
+              tagName: 'figcaption',
+              properties: {},
+              children: captionEm.children,
+            })
+          }
+          parent.children.splice(nextIndex, 1)
+        }
+        parent.children[index] = figure
+        normalizeFigures(figure)
+        continue
+      }
+    }
+
+    normalizeFigures(child)
+  }
+}
+
 const rehypeFigureWrapper: Plugin<[], Root> = () => {
   return (tree) => {
     visit(tree, 'element', (node: Element, index, parent) => {
@@ -82,6 +134,7 @@ const rehypeFigureWrapper: Plugin<[], Root> = () => {
         return SKIP
       }
     })
+    normalizeFigures(tree)
   }
 }
 

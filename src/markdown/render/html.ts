@@ -22,6 +22,7 @@ import {
   rehypeDivToSection,
   rehypeFigureWrapper,
   rehypeFootnoteLinks,
+  type WindpostWechatLayoutOptions,
   rehypeWrapTextNodes,
   remarkFrontmatterTable,
 } from './plugins'
@@ -36,6 +37,7 @@ export interface RenderOptions {
   platform?: Platform
   footnoteLabel?: string
   referenceTitle?: string
+  wechatLayout?: WindpostWechatLayoutOptions
 }
 
 interface ProcessorOptions {
@@ -44,6 +46,7 @@ interface ProcessorOptions {
   platform?: Platform
   footnoteLabel?: string
   referenceTitle?: string
+  wechatLayout?: WindpostWechatLayoutOptions
 }
 
 const sanitizeSchema = {
@@ -81,6 +84,7 @@ function createProcessor({
   platform = 'html',
   footnoteLabel = 'Footnotes',
   referenceTitle = 'References',
+  wechatLayout,
 }: ProcessorOptions) {
   const processor = unified()
     .use(remarkParse)
@@ -113,7 +117,7 @@ function createProcessor({
     processor.use(rehypeFootnoteLinks, { referenceTitle })
   }
 
-  const adapterPlugins = getAdapterPlugins(platform, { referenceTitle })
+  const adapterPlugins = getAdapterPlugins(platform, { referenceTitle, wechatLayout })
   for (const plugin of adapterPlugins) {
     if (Array.isArray(plugin)) {
       processor.use(plugin[0] as Plugin, plugin[1])
@@ -142,6 +146,7 @@ export async function render(options: RenderOptions): Promise<string> {
     platform = 'html',
     footnoteLabel = 'Footnotes',
     referenceTitle = 'References',
+    wechatLayout,
   } = options
 
   const processor = createProcessor({
@@ -150,6 +155,7 @@ export async function render(options: RenderOptions): Promise<string> {
     platform,
     footnoteLabel,
     referenceTitle,
+    wechatLayout,
   })
   const html = (await processor.process(markdown)).toString()
 

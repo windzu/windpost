@@ -8,6 +8,8 @@ export interface WindPostSettings {
   githubTokenSecret: string;
 
   wechatTemplateId: string;
+  wechatAccountName: string;
+  wechatDefaultAuthor: string;
 
   xiaohongshuMaxImages: number;
   xiaohongshuPublishUrl: string;
@@ -23,6 +25,8 @@ export const DEFAULT_SETTINGS: WindPostSettings = {
   githubBranch: "main",
   githubTokenSecret: "",
   wechatTemplateId: "builtin:anthropic",
+  wechatAccountName: "",
+  wechatDefaultAuthor: "",
   xiaohongshuMaxImages: 9,
   xiaohongshuPublishUrl: "https://creator.xiaohongshu.com/publish/publish?source=official",
   defaultMarkdownStyle: "anthropic",
@@ -137,6 +141,28 @@ export class WindPostSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("草稿字段")
       .setDesc("封面使用 wechat_cover（缺省时取正文首图）；可选字段：wechat_author、wechat_digest、wechat_source_url、wechat_open_comment、wechat_fans_only_comment。");
+
+    new Setting(containerEl)
+      .setName("公众号名称")
+      .setDesc("用于需要刊头的公众号模板，不写入文章 Properties。")
+      .addText((text) => text
+        .setPlaceholder("公众号名称")
+        .setValue(this.plugin.settings.wechatAccountName)
+        .onChange(async (value) => {
+          this.plugin.settings.wechatAccountName = value.trim();
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName("默认作者")
+      .setDesc("用于公众号草稿作者和刊头；文章显式设置 wechat_author 时优先使用文章值。")
+      .addText((text) => text
+        .setPlaceholder("作者名称")
+        .setValue(this.plugin.settings.wechatDefaultAuthor)
+        .onChange(async (value) => {
+          this.plugin.settings.wechatDefaultAuthor = value.trim();
+          await this.plugin.saveSettings();
+        }));
 
     new Setting(containerEl)
       .setName("公众号模板")

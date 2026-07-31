@@ -1,6 +1,7 @@
 import type { Element, Root, Text } from 'hast'
 import type { Plugin } from 'unified'
 import type { PlatformAdapter } from './types'
+import rehypeWindpostStructure from '../plugins/rehype-windpost-structure'
 
 import { SKIP, visit } from 'unist-util-visit'
 
@@ -157,6 +158,27 @@ const blockTags = new Set([
   'div', 'p', 'blockquote', 'pre', 'ul', 'ol', 'table',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'figure',
 ])
+
+const rehypeWechatImageHints: Plugin<[], Root> = () => (tree) => {
+  visit(tree, 'element', (node: Element) => {
+    if (node.tagName !== 'img') return
+    const title = typeof node.properties?.title === 'string'
+      ? node.properties.title.trim()
+      : ''
+    const match = title.match(
+      /^windpost:crop=(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?);position=(\d+(?:\.\d+)?%)\s+(\d+(?:\.\d+)?%)$/,
+    )
+    if (!match) return
+
+    const previous = typeof node.properties?.style === 'string'
+      ? node.properties.style.trim().replace(/;?$/, ';')
+      : ''
+    node.properties ||= {}
+    node.properties.style = `${previous}aspect-ratio:${match[1]} / ${match[2]};object-fit:cover;object-position:${match[3]} ${match[4]};`
+    node.properties.className = ['windpost-cropped-image']
+    delete node.properties.title
+  })
+}
 
 const rehypeWechatListNormalize: Plugin<[], Root> = () => (tree) => {
   visit(tree, 'element', (node: Element, index, parent) => {
@@ -407,6 +429,8 @@ export const wechatAdapter: PlatformAdapter = {
   id: 'wechat',
   name: '微信公众号',
   getPlugins: options => [
+    [rehypeWindpostStructure, options?.wechatLayout || {}],
+    rehypeWechatImageHints,
     rehypeWechatListNormalize,
     rehypeWechatCodeWhitespace,
     rehypeWechatKatexToImage,

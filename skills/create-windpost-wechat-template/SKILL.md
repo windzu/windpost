@@ -12,12 +12,18 @@ Create the template as Agent-authored files. Do not add a visual editor or requi
 1. Locate the target Obsidian Vault and use:
    `WindPost/Templates/WeChat/<template-id>/`
 2. Read [references/template-spec.md](references/template-spec.md) completely.
-3. If a reference HTML or screenshot is provided, extract reusable typography, color, spacing, and content-block rules. Do not copy article text, branding, scripts, or tracking code.
+3. If a reference HTML or screenshot is provided, inventory typography, color, spacing,
+   content blocks, masthead, image treatment, and closing components before implementing.
+   Do not copy article text, scripts, or tracking code. Account branding belongs in
+   WindPost settings and `layout: editorial`, not hard-coded CSS.
 4. Copy [assets/custom-template](assets/custom-template) as the starting package, then rename the directory and update the manifest.
-5. Implement the visual language in `style.css` against the stable `#bm-md` contract.
+5. Choose `layout: default` or `layout: editorial`, then implement the visual language in
+   `style.css` against the stable `#bm-md` and WindPost semantic-block contract.
 6. Run:
    `node scripts/validate_template.cjs <absolute-template-directory>`
 7. Report the created template path and tell the user to click「刷新」in the WindPost template selector.
+8. List all meaningful deviations from the reference. If a component cannot be represented
+   faithfully, explain the limitation instead of silently omitting it.
 
 ## Quality bar
 
@@ -26,4 +32,5 @@ Create the template as Agent-authored files. Do not add a visual editor or requi
 - Keep every selector scoped to `#bm-md`.
 - Treat preview and published WeChat HTML as the same output surface.
 - Prefer system font stacks; do not depend on remote fonts or assets.
-- If the reference contains layout-specific components that Markdown cannot express, abstract their visual language into the closest semantic elements instead of inventing unsupported markup.
+- Use WindPost semantic block directives for layout-specific components. Fall back to the
+  closest ordinary Markdown element only after explicitly reporting the loss of fidelity.

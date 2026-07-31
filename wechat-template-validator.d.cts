@@ -3,6 +3,7 @@ export interface WechatTemplateManifestData {
   id: string;
   name: string;
   description: string;
+  layout?: "default" | "editorial";
 }
 
 export interface WechatTemplateValidation {

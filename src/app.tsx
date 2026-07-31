@@ -158,6 +158,7 @@ export function App({ plugin }: Props) {
             app,
             sourcePath: doc.path,
             markdown: doc.content,
+            defaultAuthor: settings.wechatDefaultAuthor,
           });
           const template = wechatTemplates.find((item) => item.id === wechatTemplateId)
             || wechatTemplates[0];
@@ -167,9 +168,17 @@ export function App({ plugin }: Props) {
             platform: "wechat",
             enableFootnoteLinks: settings.enableFootnoteLinks,
             openLinksInNewWindow: true,
+            wechatLayout: {
+              variant: template?.layout || "default",
+              title: prepared.title,
+              digest: prepared.digest,
+              accountName: settings.wechatAccountName,
+              author: prepared.author,
+              date: prepared.layoutDate,
+            },
           });
           if (cancelled) return;
-          const { markdown: _markdown, ...metadata } = prepared;
+          const { markdown: _markdown, layoutDate: _layoutDate, ...metadata } = prepared;
           setWechatPost({ ...metadata, contentHtml: nextHtml });
           setHtml(createWechatPreviewHtml(nextHtml, app));
         }
@@ -187,6 +196,8 @@ export function App({ plugin }: Props) {
     doc,
     settings.defaultMarkdownStyle,
     settings.enableFootnoteLinks,
+    settings.wechatAccountName,
+    settings.wechatDefaultAuthor,
     settings.xiaohongshuMaxImages,
     wechatTemplateId,
     wechatTemplates,
