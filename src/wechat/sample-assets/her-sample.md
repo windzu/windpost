@@ -1,13 +1,8 @@
 ---
-title: "我花了两年，才走出那段狼狈的日子"
-tags: []
-type: longform
 stage: draft
-date: 2026-07-31
 channels:
   - wechat
 published_to: []
-summary: "关于毕业、迷茫、自我怀疑，以及一次迟到的重新开始"
 ---
 
 # 我花了两年，<br>才走出那段狼狈的日子

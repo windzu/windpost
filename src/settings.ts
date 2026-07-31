@@ -46,6 +46,20 @@ export class WindPostSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
+    containerEl.createEl("h3", { text: "WindPost 工作区" });
+
+    new Setting(containerEl)
+      .setName("首次使用初始化")
+      .setDesc("创建根目录 WindPost.base、Content 目录和三篇渠道示例。只补齐缺失文件，不覆盖已有内容。")
+      .addButton((button) => button
+        .setButtonText("初始化/补齐")
+        .setCta()
+        .onClick(async () => {
+          button.setDisabled(true).setButtonText("初始化中…");
+          await this.plugin.initializeWorkspace();
+          button.setDisabled(false).setButtonText("初始化/补齐");
+        }));
+
     containerEl.createEl("h3", { text: "Blog" });
 
     new Setting(containerEl)
@@ -166,14 +180,7 @@ export class WindPostSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("公众号模板")
-      .setDesc("内置 Anthropic 与 Her；Agent 创建的模板放到 Vault 的 WindPost/Templates/WeChat/<template-id>/，通过发布中心选择。")
-      .addButton((button) => button
-        .setButtonText("创建 Her 示例")
-        .onClick(async () => {
-          button.setDisabled(true).setButtonText("创建中…");
-          await this.plugin.openHerTemplateSample();
-          button.setDisabled(false).setButtonText("创建 Her 示例");
-        }));
+      .setDesc("开箱内置 Anthropic 与 Her，初始化工作区后可直接通过示例文章体验，无需自行设计模板。");
 
     // ---------- 小红书 ----------
     containerEl.createEl("h3", { text: "小红书" });

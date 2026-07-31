@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import { normalizePath, type App, type TFile } from "obsidian";
+import { normalizePath, TFile, type App } from "obsidian";
 import YAML from "yaml";
 import { normalizeWechatCoverReference } from "./html";
 import type { WechatAssetSource, WechatPost } from "./types";
@@ -36,7 +36,7 @@ export function prepareWechatContent({
   const digest = text(frontmatter.wechat_digest)
     || text(frontmatter.summary)
     || text(frontmatter.description);
-  const layoutDate = text(frontmatter.date);
+  const layoutDate = text(frontmatter.date) || sourceCreatedDate(app, sourcePath);
   validateMetadata(title, author, digest);
   const contentSourceUrl = text(frontmatter.wechat_source_url)
     || text(frontmatter.source_url)
@@ -188,6 +188,16 @@ function countText(value: string): number {
 
 function basename(value: string): string {
   return path.posix.basename(normalizePath(value), path.posix.extname(value));
+}
+
+function sourceCreatedDate(app: App, sourcePath: string): string {
+  const file = app.vault.getAbstractFileByPath(normalizePath(sourcePath));
+  if (!(file instanceof TFile) || typeof file.stat.ctime !== "number") return "";
+  const date = new Date(file.stat.ctime);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function safeDecode(value: string): string {

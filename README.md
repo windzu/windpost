@@ -29,10 +29,18 @@ WePost 不再作为 Obsidian 插件继续使用。它只作为现有 Markdown �
 
 ## 使用方式
 
-典型流程围绕当前笔记展开：
+首次打开发布中心时，点击「一键初始化」。WindPost 会创建：
 
-1. 在 Obsidian 中完成文章，打开 WindPost；
-2. 选择 Blog、公众号或小红书，按需同时处理多个渠道；
+- 根目录 `WindPost.base` 内容入口；
+- `Content/` 内容目录；
+- 通用长内容、Her 完整文章、小红书短内容三篇示例；
+- Her 示例所需的四张配图。
+
+初始化只补齐缺失文件，不覆盖用户已有内容，也可以从命令面板或设置页重复执行。
+之后的典型流程围绕当前笔记展开：
+
+1. 从 `WindPost.base` 选择示例并改写，或在 `Content/` 中新建文章；
+2. 打开 WindPost，选择 Blog、公众号或小红书；
 3. 查看该渠道的最终效果和必要提示；
 4. 确认后生成或提交到对应渠道；
 5. WindPost 展示每个渠道的结果，失败渠道可以单独重试。
@@ -41,8 +49,8 @@ WePost 不再作为 Obsidian 插件继续使用。它只作为现有 Markdown �
 可以预览最终富文本，小红书可以预览标题、正文和卡片。默认停在不可逆操作之前，
 由作者完成最终确认。
 
-小红书与 Blog、公众号共用笔记的 `title` 和 Markdown 正文，只额外读取 Properties
-中的 `cover_text` 与 `tags`。未设置 `cover_text` 时使用 `title` 渲染封面。WindPost
+小红书与 Blog、公众号共用文件名、一级标题和 Markdown 正文，只额外读取可选的
+`cover_text` 与 `tags`。未设置 `cover_text` 时使用标题渲染封面。WindPost
 生成 3:4 图文卡片后打开创作服务平台，上传图片并填写标题、正文和标签，但不会
 点击最终发布，也不要求笔记维护平台专属章节。
 
@@ -51,8 +59,10 @@ WePost 不再作为 Obsidian 插件继续使用。它只作为现有 Markdown �
 预览与最终 PNG 共用分页后的行数据，不根据段落长度自动改变正文样式。封面文案会
 自动缩小字号以完整显示，无法容纳时明确报错，不会静默截断。
 
-WindPost 不要求作者为了统一模型而维护固定 frontmatter。需要什么信息，就从
-当前笔记、Obsidian metadata、插件配置或发布时输入中获取；具体字段随真实需求演进。
+`WindPost.base` 的基础契约只有三个字段：`stage` 表示创作阶段，`channels` 表示计划
+发布渠道，`published_to` 记录已经完成的渠道。标题从文件名或一级标题推导，日期使用
+文件时间或发布时生成；账号名称、作者等账户信息放在插件设置中。其他 Properties
+只有在真实发布需求出现时才添加。
 
 ## 项目边界
 
@@ -152,10 +162,10 @@ WindScroll，私人 vault 也不会进入公开仓库。
 或公网 IP 白名单。WindPost 使用公众号后台的浏览器接口，因此微信后台页面或接口
 变化后可能需要更新适配。
 
-公众号排版内置 `Anthropic` 和 `Her` 两个模板，可在公众号预览区直接切换。自定义
-模板由 Agent 按 [公众号模板规范](docs/WECHAT_TEMPLATE_SPEC.md) 创建，并放到 Vault
-的 `WindPost/Templates/WeChat/<template-id>/`。WindPost 只负责扫描、校验和使用，
-不提供模板编辑器；模板创建 Skill 位于
+公众号排版开箱内置 `Anthropic` 和 `Her` 两个模板，可在公众号预览区直接切换；
+初始化提供对应的完整示例，普通用户无需自行设计。高级用户仍可让 Agent 按
+[公众号模板规范](docs/WECHAT_TEMPLATE_SPEC.md) 创建模板，并放到 Vault 的
+`WindPost/Templates/WeChat/<template-id>/`。模板创建 Skill 位于
 [`skills/create-windpost-wechat-template`](skills/create-windpost-wechat-template/)。
 
 需要刊头的 `editorial` 模板从 WindPost 设置读取公众号名称和默认作者，不要求每篇
@@ -163,10 +173,9 @@ WindScroll，私人 vault 也不会进入公开仓库。
 WindPost 语义块；这些标记由 Agent 生成，不增加必填 Properties，并可在普通模板中
 降级为可读内容。
 
-Her 内置一份完整示例文章「我花了两年，才走出那段狼狈的日子」及四张配图，用于
+Her 示例为完整文章「我花了两年，才走出那段狼狈的日子」及四张配图，用于
 展示刊头、PREFACE、六个章节、说明卡片、引语、阅读列表、Podcast、图片裁切和结尾
-卡片。用户可在 WindPost 设置中点击「创建 Her 示例」，或从命令面板执行
-「创建并预览 Her 模板示例」；示例只在用户主动触发时写入 Vault，重复执行不会覆盖
-已有笔记或配图。内置图片已压缩并移除 EXIF/GPS 元数据。
+卡片。工作区初始化会自动创建该示例，也可从命令面板单独执行「创建并预览 Her
+模板示例」；重复执行不会覆盖已有笔记或配图。内置图片已压缩并移除 EXIF/GPS 元数据。
 
 下一步是在真实平台页面和账号权限差异中持续收敛错误提示与发布体验。
