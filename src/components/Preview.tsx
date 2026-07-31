@@ -15,6 +15,7 @@ export function Preview({ html, status, emptyHint, errorMessage, device = "phone
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const iframeReadyRef = useRef(false);
   const pendingHtmlRef = useRef<string | null>(null);
+  const latestHtmlRef = useRef(html);
 
   const updateIframeContent = useCallback((next: string) => {
     const iframe = iframeRef.current;
@@ -29,10 +30,8 @@ export function Preview({ html, status, emptyHint, errorMessage, device = "phone
   const onIframeLoad = useCallback(() => {
     iframeReadyRef.current = true;
 
-    if (pendingHtmlRef.current !== null) {
-      updateIframeContent(pendingHtmlRef.current);
-      pendingHtmlRef.current = null;
-    }
+    updateIframeContent(pendingHtmlRef.current ?? latestHtmlRef.current);
+    pendingHtmlRef.current = null;
 
     // 拦截 iframe 里的链接点击，外链丢到系统浏览器，锚点做平滑滚动
     const iframeDoc = iframeRef.current?.contentDocument;
@@ -61,6 +60,7 @@ export function Preview({ html, status, emptyHint, errorMessage, device = "phone
   }, [updateIframeContent]);
 
   useEffect(() => {
+    latestHtmlRef.current = html;
     if (!html) return;
     if (iframeReadyRef.current) updateIframeContent(html);
     else pendingHtmlRef.current = html;

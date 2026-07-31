@@ -2,5 +2,6 @@
   "schemaVersion": 1,
   "id": "custom-template",
   "name": "Custom Template",
-  "description": "Agent-authored WindPost WeChat typography template."
+  "description": "Agent-authored WindPost WeChat typography template.",
+  "layout": "default"
 }

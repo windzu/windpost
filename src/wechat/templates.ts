@@ -12,6 +12,7 @@ export interface WechatTemplate {
   name: string;
   description: string;
   source: "builtin" | "custom";
+  layout: "default" | "editorial";
   css: string;
 }
 
@@ -26,6 +27,7 @@ const BUILTIN_TEMPLATES: WechatTemplate[] = [
     name: "Anthropic",
     description: "暖白、墨色与赭色构成的克制技术写作风格。",
     source: "builtin",
+    layout: "default",
     css: resetCss + anthropicCss,
   },
   {
@@ -33,6 +35,7 @@ const BUILTIN_TEMPLATES: WechatTemplate[] = [
     name: "Her",
     description: "暖白纸张、蓝灰正文与深靛蓝标题构成的编辑感排版。",
     source: "builtin",
+    layout: "editorial",
     css: resetCss + herCss,
   },
 ];
@@ -92,6 +95,7 @@ export async function discoverWechatTemplates(app: App): Promise<WechatTemplateD
         name: validation.manifest.name.trim(),
         description: validation.manifest.description.trim(),
         source: "custom",
+        layout: validation.manifest.layout === "editorial" ? "editorial" : "default",
         css: resetCss + css,
       });
     } catch (error) {

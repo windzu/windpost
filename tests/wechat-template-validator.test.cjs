@@ -31,8 +31,20 @@ test("accepts the Her stylesheet through the public template contract", () => {
     id: "her",
     name: "Her",
     description: "Built-in editorial template.",
+    layout: "editorial",
   }), css);
   assert.deepEqual(result.errors, []);
+});
+
+test("rejects an unsupported template layout", () => {
+  const result = validateTemplateFiles(JSON.stringify({
+    schemaVersion: 1,
+    id: "bad-layout",
+    name: "Bad layout",
+    description: "Invalid layout.",
+    layout: "magazine",
+  }), "#bm-md { color: #222; }");
+  assert.ok(result.errors.some((error) => error.includes("layout")));
 });
 
 test("rejects unsafe and unscoped custom stylesheets", () => {

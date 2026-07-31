@@ -6,12 +6,14 @@ import type { WechatAssetSource, WechatPost } from "./types";
 
 interface PreparedWechatContent extends Omit<WechatPost, "contentHtml"> {
   markdown: string;
+  layoutDate: string;
 }
 
 interface ImageRef {
   match: string;
   linkpath: string;
   alt: string;
+  title: string;
   remote: boolean;
 }
 
@@ -19,17 +21,22 @@ export function prepareWechatContent({
   app,
   sourcePath,
   markdown,
+  defaultAuthor = "",
 }: {
   app: App;
   sourcePath: string;
   markdown: string;
+  defaultAuthor?: string;
 }): PreparedWechatContent {
   const { frontmatter, body } = splitFrontmatter(markdown);
   const title = text(frontmatter.title) || firstHeading(body) || basename(sourcePath);
-  const author = text(frontmatter.wechat_author) || text(frontmatter.author);
+  const author = text(frontmatter.wechat_author)
+    || text(frontmatter.author)
+    || defaultAuthor.trim();
   const digest = text(frontmatter.wechat_digest)
     || text(frontmatter.summary)
     || text(frontmatter.description);
+  const layoutDate = text(frontmatter.date);
   validateMetadata(title, author, digest);
   const contentSourceUrl = text(frontmatter.wechat_source_url)
     || text(frontmatter.source_url)
@@ -52,7 +59,7 @@ export function prepareWechatContent({
     resolvedImages.push(source);
     replacements.set(
       image.match,
-      `![${escapeMarkdownAlt(image.alt || file.basename)}](${assetUrl(source)})`,
+      `![${escapeMarkdownAlt(image.alt || file.basename)}](${assetUrl(source)}${image.title ? ` "${escapeMarkdownTitle(image.title)}"` : ""})`,
     );
   }
 
@@ -65,6 +72,7 @@ export function prepareWechatContent({
     title,
     author,
     digest,
+    layoutDate,
     markdown: replaceAll(body, replacements),
     contentSourceUrl,
     coverSource,
@@ -96,16 +104,17 @@ function findImages(markdown: string): ImageRef[] {
         match: match[0],
         linkpath,
         alt: /^\d+(?:x\d+)?$/.test(modifier) ? "" : modifier,
+        title: "",
         remote: false,
       });
     }
   }
-  for (const match of markdown.matchAll(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)) {
+  for (const match of markdown.matchAll(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g)) {
     const linkpath = safeDecode(match[2]);
     if (isRemoteImage(linkpath)) {
-      refs.push({ match: match[0], linkpath, alt: match[1], remote: true });
+      refs.push({ match: match[0], linkpath, alt: match[1], title: match[3] || "", remote: true });
     } else if (!linkpath.startsWith("data:") && isImage(linkpath)) {
-      refs.push({ match: match[0], linkpath, alt: match[1], remote: false });
+      refs.push({ match: match[0], linkpath, alt: match[1], title: match[3] || "", remote: false });
     }
   }
   return refs;
@@ -191,4 +200,8 @@ function safeDecode(value: string): string {
 
 function escapeMarkdownAlt(value: string): string {
   return value.replace(/[[\]\\]/g, "\\$&");
+}
+
+function escapeMarkdownTitle(value: string): string {
+  return value.replace(/["\\]/g, "\\$&");
 }

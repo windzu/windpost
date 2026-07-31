@@ -158,4 +158,9 @@ WindScroll，私人 vault 也不会进入公开仓库。
 不提供模板编辑器；模板创建 Skill 位于
 [`skills/create-windpost-wechat-template`](skills/create-windpost-wechat-template/)。
 
+需要刊头的 `editorial` 模板从 WindPost 设置读取公众号名称和默认作者，不要求每篇
+文章重复填写。前言、说明、阅读要点、Podcast 与结尾卡片可使用模板规范中的
+WindPost 语义块；这些标记由 Agent 生成，不增加必填 Properties，并可在普通模板中
+降级为可读内容。
+
 下一步是在真实平台页面和账号权限差异中持续收敛错误提示与发布体验。

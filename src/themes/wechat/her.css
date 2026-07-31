@@ -1,20 +1,20 @@
 /* ============================================
    Her
 
-   抽象自用户提供的编辑排版参考：
-   暖白纸张、蓝灰正文、深靛蓝标题、钴蓝强调，
-   以克制的边线和宽松的中文行距建立阅读节奏。
+   编辑刊物式公众号排版。除普通 Markdown 外，还支持
+   WindPost 结构语义：hero、preface、note、reading、
+   podcast 与 end。
    ============================================ */
 
 #bm-md {
-  color: #555a64;
+  color: #666b74;
   background-color: #fcfaf5;
   font-family: 'PingFang SC', 'Hiragino Sans GB', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 15.5px;
   font-weight: 300;
   line-height: 2.05;
   letter-spacing: 0.65px;
-  padding: 24px 28px 52px;
+  padding: 0 28px 52px;
   text-align: justify;
 }
 
@@ -29,78 +29,9 @@
   text-align: left;
 }
 
-#bm-md h1 {
-  margin-top: 0.9em;
-  margin-bottom: 1.5em;
-  font-size: 26px;
-  font-weight: 600;
-  line-height: 1.55;
-  letter-spacing: 1.5px;
-  text-align: center;
-}
-
-#bm-md h1::after {
-  content: '';
-  display: block;
-  width: 42px;
-  height: 2px;
-  margin: 18px auto 0;
-  background-color: #3156b4;
-}
-
-#bm-md h2 {
-  margin-top: 2.7em;
-  margin-bottom: 1.45em;
-  padding-top: 0.65em;
-  padding-bottom: 0.7em;
-  border-bottom: 1px solid rgba(49, 86, 180, 0.22);
-  font-size: 21px;
-  font-weight: 700;
-  line-height: 1.5;
-  letter-spacing: 1px;
-}
-
-#bm-md h2::before {
-  content: '';
-  display: block;
-  width: 58px;
-  height: 3px;
-  margin-bottom: 12px;
-  background-color: #3156b4;
-}
-
-#bm-md h3 {
-  margin-top: 2.1em;
-  margin-bottom: 1em;
-  padding-left: 12px;
-  border-left: 3px solid #3156b4;
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.6;
-  letter-spacing: 0.8px;
-}
-
-#bm-md h4 {
-  margin-top: 1.8em;
-  margin-bottom: 0.8em;
-  font-family: 'Songti SC', STSong, SimSun, serif;
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 1.7;
-}
-
-#bm-md h5,
-#bm-md h6 {
-  margin-top: 1.5em;
-  margin-bottom: 0.7em;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-
 #bm-md p {
-  margin-bottom: 18px;
-  color: #555a64;
+  margin: 0 0 18px;
+  color: #666b74;
   font-size: 15.5px;
   font-weight: 300;
   line-height: 2.05;
@@ -114,13 +45,13 @@
 
 #bm-md strong,
 #bm-md b {
-  color: #454a53;
+  color: #565b64;
   font-weight: 600;
 }
 
 #bm-md em,
 #bm-md i {
-  color: #666b74;
+  color: #777c84;
   font-family: Georgia, 'Times New Roman', 'Songti SC', serif;
   font-style: italic;
   font-weight: 300;
@@ -128,8 +59,16 @@
 
 #bm-md mark {
   color: #25345e;
-  background-color: #e8ebf2;
-  padding: 0.08em 0.24em;
+  background-color: transparent;
+  font-weight: 500;
+  padding: 0;
+}
+
+#bm-md u {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 2px dotted rgba(49, 86, 180, 0.5);
+  padding-bottom: 2px;
 }
 
 #bm-md a {
@@ -138,32 +77,225 @@
   border-bottom: 1px solid rgba(49, 86, 180, 0.35);
 }
 
-#bm-md blockquote {
-  margin: 26px 0;
+/* 刊头：内容来自公众号配置与文章公共元数据。 */
+#bm-md .windpost-hero {
+  margin: 0 -28px 44px;
+  padding: 34px 24px 32px;
+  color: #25345e;
+  background-color: #fcfaf5;
+  text-align: center;
+}
+
+#bm-md .windpost-hero-kicker {
+  margin: 0;
+  color: #3156b4;
+  font-family: Optima, 'Helvetica Neue', sans-serif;
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 1.5px;
+  text-align: center;
+}
+
+#bm-md .windpost-hero-brand {
+  display: inline-block;
+  margin: 24px 0 0;
+  padding: 11px 14px 9px;
+  color: #3156b4;
+  background-color: #fcfaf5;
+  border: 1px solid #3156b4;
+  font-family: Optima, 'Helvetica Neue', sans-serif;
+  font-size: 11px;
+  line-height: 1.6;
+  letter-spacing: 1.3px;
+  text-align: center;
+}
+
+#bm-md .windpost-hero-issue {
+  margin: 22px 0 0;
+  color: #888d96;
+  font-family: Optima, 'Helvetica Neue', sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 3px;
+  text-align: center;
+}
+
+#bm-md .windpost-hero-title {
+  margin: 20px 0 0;
+  padding: 0;
+  color: #25345e;
+  border: 0;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.55;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+#bm-md .windpost-hero-subtitle {
+  margin: 24px 0 0;
+  padding: 0;
+  color: #9a9fa7;
+  background-color: transparent;
+  border: 0;
+  font-size: 12.5px;
+  font-weight: 300;
+  line-height: 1.9;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+/* 前言组合卡片。 */
+#bm-md .windpost-preface {
+  margin: 0 0 44px;
+  padding: 28px 24px 24px;
+  background-color: #f3f2ee;
+  border: 1px solid #d8d9dc;
+}
+
+#bm-md .windpost-preface .windpost-block-label {
+  margin: 0 0 18px;
+  color: #3156b4;
+  font-family: Optima, 'Helvetica Neue', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 2.4px;
+  text-align: center;
+}
+
+#bm-md .windpost-preface .windpost-block-title {
+  margin: 0 0 20px;
+  padding: 0;
+  color: #435b9d;
+  border: 0;
+  font-size: 27px;
+  font-weight: 300;
+  line-height: 1.5;
+  letter-spacing: 2.5px;
+  text-align: center;
+}
+
+#bm-md .windpost-preface p {
+  margin-bottom: 17px;
+  color: #666b74;
+}
+
+/* 标准章节，PART 编号由渲染器写入而不是依赖伪元素。 */
+#bm-md .windpost-chapter {
+  margin: 56px 0 30px;
+  padding: 8px 0 16px;
+  color: #25345e;
+  background-color: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(49, 86, 180, 0.22);
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 1px;
+}
+
+#bm-md .windpost-chapter::before {
+  content: 'PART ' attr(data-windpost-part);
+  display: block;
+  margin: 0 0 11px;
+  color: #3156b4;
+  font-family: Optima, 'Helvetica Neue', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 2.2px;
+}
+
+#bm-md .windpost-chapter:last-of-type {
+  padding-top: 14px;
+  border-bottom: 0;
+}
+
+#bm-md h3 {
+  margin: 34px 0 18px;
+  color: #25345e;
+  font-family: 'Songti SC', STSong, SimSun, serif;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+#bm-md h4,
+#bm-md h5,
+#bm-md h6 {
+  margin: 28px 0 13px;
+  color: #25345e;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+/* 普通引用对应参考稿中的 pull quote。 */
+#bm-md .windpost-pull-quote {
+  margin: 18px 0;
+  padding: 6px 10px;
+  color: #435b9d;
+  background-color: transparent;
+  border: 0;
+  font-family: 'Songti SC', STSong, SimSun, serif;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.75;
+  text-align: center;
+}
+
+#bm-md .windpost-pull-quote p {
+  margin: 0;
+  color: #435b9d;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  text-align: inherit;
+}
+
+#bm-md .windpost-pull-quote .windpost-quote-mark {
+  color: #3156b4;
+  font-size: 26px;
+  line-height: 1;
+}
+
+/* 与 pull quote 分开的说明块。 */
+#bm-md .windpost-note {
+  margin: 24px 0;
   padding: 18px 20px;
   color: #59646a;
   background-color: #f3f5f5;
   border-left: 3px solid #435b9d;
 }
 
-#bm-md blockquote p {
-  margin-bottom: 0;
+#bm-md .windpost-note p {
+  margin-bottom: 12px;
   color: #59646a;
   line-height: 1.8;
+}
+
+#bm-md .windpost-block-label {
+  color: #3156b4;
+  font-family: Optima, 'Helvetica Neue', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 2px;
 }
 
 #bm-md ul,
 #bm-md ol {
   margin: 24px 0 30px;
-  padding: 22px 22px 12px 42px;
+  padding: 24px 22px 12px 42px;
   background-color: #f1ede4;
   border-radius: 2px;
 }
 
 #bm-md li {
-  margin-bottom: 14px;
+  margin: 0 0 14px;
   padding-left: 4px;
-  color: #454a53;
+  color: #565b64;
   font-size: 15px;
   line-height: 1.8;
 }
@@ -172,13 +304,84 @@
   color: #3156b4;
 }
 
-#bm-md li > ul,
-#bm-md li > ol {
-  margin-top: 10px;
-  margin-bottom: 4px;
-  padding-top: 12px;
-  padding-bottom: 2px;
-  background-color: rgba(252, 250, 245, 0.66);
+#bm-md .windpost-reading {
+  margin: 26px 0;
+  padding: 0;
+  background-color: transparent;
+  border: 0;
+}
+
+#bm-md .windpost-reading ul,
+#bm-md .windpost-reading ol {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  list-style-position: outside;
+}
+
+#bm-md .windpost-reading li {
+  margin: 0 0 18px 20px;
+  padding-left: 3px;
+  color: #666b74;
+  font-size: 15.5px;
+  font-weight: 300;
+  line-height: 2;
+}
+
+/* Podcast 是结构组件，不再退化成普通 h3。 */
+#bm-md .windpost-podcast {
+  position: relative;
+  margin: 40px 0;
+  padding: 30px 24px 27px;
+  color: #ffffff;
+  background-color: #25345e;
+  overflow: hidden;
+}
+
+#bm-md .windpost-podcast::after {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  right: -45px;
+  top: -45px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  box-shadow: 0 0 0 18px rgba(255, 255, 255, 0.04);
+}
+
+#bm-md .windpost-podcast .windpost-block-label {
+  margin: 0 0 18px;
+  color: #d8c8b0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 2px;
+}
+
+#bm-md .windpost-podcast .windpost-podcast-icon {
+  margin: 18px 0 5px;
+  color: #ffffff;
+  font-size: 30px;
+  line-height: 1;
+}
+
+#bm-md .windpost-podcast h3 {
+  margin: 8px 0 14px;
+  padding: 0;
+  color: #ffffff;
+  border: 0;
+  font-family: 'Songti SC', STSong, SimSun, serif;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+#bm-md .windpost-podcast p {
+  margin: 0;
+  color: #dfe5e8;
+  font-size: 13px;
+  line-height: 1.8;
 }
 
 #bm-md figure {
@@ -192,6 +395,11 @@
   height: auto;
 }
 
+#bm-md .windpost-cropped-image {
+  width: 100%;
+  height: auto;
+}
+
 #bm-md figcaption {
   margin-top: 10px;
   color: #9aa2a5;
@@ -200,6 +408,43 @@
   line-height: 1.5;
   letter-spacing: 1.4px;
   text-align: center;
+}
+
+#bm-md .windpost-end {
+  margin: 44px -28px -52px;
+  padding: 44px 28px;
+  color: #f8f4e9;
+  background-color: #25345e;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%);
+  background-size: 18px 18px;
+  text-align: center;
+}
+
+#bm-md .windpost-end .windpost-block-label {
+  margin: 0 0 14px;
+  color: #d8c8b0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 11px;
+  line-height: 1.6;
+  letter-spacing: 3px;
+  text-align: center;
+}
+
+#bm-md .windpost-end p {
+  margin: 0 0 10px;
+  color: #f8f4e9;
+  font-family: 'Songti SC', STSong, SimSun, serif;
+  font-size: 17px;
+  line-height: 1.7;
+  letter-spacing: 1.5px;
+  text-align: center;
+}
+
+#bm-md .windpost-end .windpost-block-label + p {
+  font-size: 26px;
+  letter-spacing: 3px;
 }
 
 #bm-md hr {
@@ -239,7 +484,7 @@
   width: 100%;
   margin: 28px 0;
   border-collapse: collapse;
-  color: #555a64;
+  color: #666b74;
   font-size: 13.5px;
   line-height: 1.7;
 }
@@ -264,7 +509,7 @@
 #bm-md .markdown-alert {
   margin: 26px 0;
   padding: 18px 20px;
-  color: #555a64;
+  color: #666b74;
   background-color: #f3f2ee;
   border: 1px solid #d8d9dc;
   border-left: 3px solid #3156b4;
