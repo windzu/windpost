@@ -79,6 +79,11 @@ export function App({ plugin }: Props) {
     void refreshWechatTemplates();
   }, [refreshWechatTemplates]);
 
+  useEffect(() => plugin.onWechatPreviewRequest((templateId) => {
+    setChannel("wechat");
+    setWechatTemplateId(templateId);
+  }), [plugin]);
+
   useEffect(() => {
     const refresh = () => {
       const file = app.workspace.getActiveFile();

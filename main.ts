@@ -21,6 +21,7 @@ import type {
   XiaohongshuPublishPayload,
 } from "./src/xiaohongshu/types";
 import { exportWechatBrowserPayload } from "./src/wechat/publish";
+import { createHerTemplateSample } from "./src/wechat/sample";
 import type {
   WechatBrowserPayload,
   WechatDraftResult,
@@ -37,6 +38,8 @@ export default class WindPostPlugin extends Plugin {
   settings!: WindPostSettings;
   private xiaohongshuProcesses = new Set<ChildProcessWithoutNullStreams>();
   private wechatProcesses = new Set<ChildProcessWithoutNullStreams>();
+  private wechatPreviewListeners = new Set<(templateId: string) => void>();
+  private pendingWechatPreviewTemplateId = "";
 
   async onload() {
     await this.loadSettings();
@@ -54,6 +57,12 @@ export default class WindPostPlugin extends Plugin {
       name: "打开 WindPost 发布中心",
       callback: () => void this.activateView(),
     });
+
+    this.addCommand({
+      id: "create-her-template-sample",
+      name: "创建并预览 Her 模板示例",
+      callback: () => void this.openHerTemplateSample(),
+    });
   }
 
   async onunload() {
@@ -61,6 +70,8 @@ export default class WindPostPlugin extends Plugin {
     this.xiaohongshuProcesses.clear();
     for (const child of this.wechatProcesses) child.kill();
     this.wechatProcesses.clear();
+    this.wechatPreviewListeners.clear();
+    this.pendingWechatPreviewTemplateId = "";
   }
 
   async loadSettings() {
@@ -88,6 +99,36 @@ export default class WindPostPlugin extends Plugin {
     }
 
     if (leaf) workspace.revealLeaf(leaf);
+  }
+
+  onWechatPreviewRequest(listener: (templateId: string) => void): () => void {
+    this.wechatPreviewListeners.add(listener);
+    if (this.pendingWechatPreviewTemplateId) {
+      const templateId = this.pendingWechatPreviewTemplateId;
+      this.pendingWechatPreviewTemplateId = "";
+      listener(templateId);
+    }
+    return () => this.wechatPreviewListeners.delete(listener);
+  }
+
+  async openHerTemplateSample(): Promise<void> {
+    try {
+      const result = await createHerTemplateSample(this.app);
+      this.settings.wechatTemplateId = "builtin:her";
+      await this.saveSettings();
+      await this.app.workspace.getLeaf("tab").openFile(result.file);
+      await this.activateView();
+      this.requestWechatPreview("builtin:her");
+
+      const action = result.created ? "已创建" : "已存在，已打开";
+      const restored = result.restoredAssets > 0
+        ? `，补齐 ${result.restoredAssets} 张配图`
+        : "";
+      new Notice(`WindPost: Her 模板示例${action}${restored}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      new Notice(`WindPost: 创建 Her 模板示例失败：${message}`, 8000);
+    }
   }
 
   async publishBlog(post: BlogPost): Promise<GitHubPublishResult> {
@@ -306,6 +347,13 @@ export default class WindPostPlugin extends Plugin {
     return path.join(basePath, this.manifest.dir);
   }
 
+  private requestWechatPreview(templateId: string): void {
+    if (this.wechatPreviewListeners.size === 0) {
+      this.pendingWechatPreviewTemplateId = templateId;
+      return;
+    }
+    for (const listener of this.wechatPreviewListeners) listener(templateId);
+  }
 }
 
 function tail(value: string, max = 1200): string {

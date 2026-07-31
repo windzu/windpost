@@ -42,6 +42,8 @@ const context = await esbuild.context({
   loader: {
     ".css": "text",
     ".html": "text",
+    ".md": "text",
+    ".jpg": "dataurl",
   },
 });
 
