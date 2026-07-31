@@ -20,6 +20,11 @@ import type {
   XiaohongshuPost,
   XiaohongshuPublishPayload,
 } from "./src/xiaohongshu/types";
+import {
+  getWindPostWorkspaceStatus,
+  initializeWindPostWorkspace,
+  type WindPostWorkspaceStatus,
+} from "./src/workspace/initialize";
 import { exportWechatBrowserPayload } from "./src/wechat/publish";
 import { createHerTemplateSample } from "./src/wechat/sample";
 import type {
@@ -62,6 +67,12 @@ export default class WindPostPlugin extends Plugin {
       id: "create-her-template-sample",
       name: "创建并预览 Her 模板示例",
       callback: () => void this.openHerTemplateSample(),
+    });
+
+    this.addCommand({
+      id: "initialize-windpost-workspace",
+      name: "初始化 WindPost 工作区",
+      callback: () => void this.initializeWorkspace(),
     });
   }
 
@@ -109,6 +120,29 @@ export default class WindPostPlugin extends Plugin {
       listener(templateId);
     }
     return () => this.wechatPreviewListeners.delete(listener);
+  }
+
+  getWorkspaceStatus(): Promise<WindPostWorkspaceStatus> {
+    return getWindPostWorkspaceStatus(this.app);
+  }
+
+  async initializeWorkspace(): Promise<boolean> {
+    try {
+      const result = await initializeWindPostWorkspace(this.app);
+      await this.app.workspace.getLeaf("tab").openFile(result.baseFile);
+      const detail = result.createdFiles > 0
+        ? `创建 ${result.createdFiles} 个文件`
+        : "现有文件均已保留";
+      const assets = result.restoredAssets > 0
+        ? `，补齐 ${result.restoredAssets} 张示例配图`
+        : "";
+      new Notice(`WindPost: 工作区已就绪，${detail}${assets}`);
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      new Notice(`WindPost: 初始化失败：${message}`, 8000);
+      return false;
+    }
   }
 
   async openHerTemplateSample(): Promise<void> {

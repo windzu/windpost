@@ -43,6 +43,7 @@ const context = await esbuild.context({
     ".css": "text",
     ".html": "text",
     ".md": "text",
+    ".base": "text",
     ".jpg": "dataurl",
   },
 });

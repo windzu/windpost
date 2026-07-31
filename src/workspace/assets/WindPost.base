@@ -1,0 +1,73 @@
+filters:
+  and:
+    - file.folder == "Content"
+properties:
+  note.stage:
+    displayName: 阶段
+  note.channels:
+    displayName: 计划渠道
+  note.published_to:
+    displayName: 已发布渠道
+  file.mtime:
+    displayName: 最近修改
+views:
+  - type: table
+    name: 创作中
+    filters:
+      or:
+        - note.stage == "idea"
+        - note.stage == "draft"
+    order:
+      - file.name
+      - stage
+      - channels
+      - published_to
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+    columnSize:
+      file.name: 420
+  - type: table
+    name: 待发布
+    filters:
+      and:
+        - note.stage == "ready"
+    order:
+      - file.name
+      - channels
+      - published_to
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+    columnSize:
+      file.name: 420
+  - type: table
+    name: 已完成
+    filters:
+      and:
+        - note.stage == "done"
+    order:
+      - file.name
+      - channels
+      - published_to
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+    columnSize:
+      file.name: 420
+  - type: table
+    name: 全部内容
+    order:
+      - file.name
+      - stage
+      - channels
+      - published_to
+      - file.mtime
+    sort:
+      - property: file.mtime
+        direction: DESC
+    columnSize:
+      file.name: 420

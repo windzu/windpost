@@ -55,6 +55,8 @@ export function App({ plugin }: Props) {
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [workspaceReady, setWorkspaceReady] = useState<boolean | null>(null);
+  const [initializingWorkspace, setInitializingWorkspace] = useState(false);
 
   const refreshWechatTemplates = useCallback(async (showNotice = false) => {
     const discovery = await discoverWechatTemplates(app);
@@ -78,6 +80,19 @@ export function App({ plugin }: Props) {
   useEffect(() => {
     void refreshWechatTemplates();
   }, [refreshWechatTemplates]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void plugin.getWorkspaceStatus()
+      .then((result) => {
+        if (!cancelled) setWorkspaceReady(result.initialized);
+      })
+      .catch((error) => {
+        console.warn("WindPost: 无法检查工作区状态", error);
+        if (!cancelled) setWorkspaceReady(false);
+      });
+    return () => { cancelled = true; };
+  }, [plugin]);
 
   useEffect(() => plugin.onWechatPreviewRequest((templateId) => {
     setChannel("wechat");
@@ -216,6 +231,14 @@ export function App({ plugin }: Props) {
     void plugin.saveSettings();
   };
 
+  const initializeWorkspace = async () => {
+    if (initializingWorkspace) return;
+    setInitializingWorkspace(true);
+    const success = await plugin.initializeWorkspace();
+    if (success) setWorkspaceReady(true);
+    setInitializingWorkspace(false);
+  };
+
   const publishBlog = async () => {
     if (!blogPost || publishing) return;
     const confirmed = await confirmPublish(
@@ -307,6 +330,23 @@ export function App({ plugin }: Props) {
         <span className="windpost-header-path">{fileName}</span>
         <span className="windpost-header-status">{message}</span>
       </header>
+
+      {workspaceReady === false && (
+        <section className="windpost-onboarding">
+          <div>
+            <strong>首次使用 WindPost</strong>
+            <span>创建 WindPost 内容库、标准 Base 和三篇渠道示例；已有内容不会被覆盖。</span>
+          </div>
+          <button
+            type="button"
+            className="mod-cta"
+            disabled={initializingWorkspace}
+            onClick={() => void initializeWorkspace()}
+          >
+            {initializingWorkspace ? "正在初始化…" : "一键初始化"}
+          </button>
+        </section>
+      )}
 
       <ChannelBar value={channel} onChange={setChannel} />
 
