@@ -12,7 +12,7 @@ published_to: []
 
 这是一篇可直接改写的长内容示例，同时适用于 Blog 和微信公众号。文件名或一级标题会成为发布标题，不需要重复维护 `title` 属性。
 
-![示例封面](WindPost/Examples/Her/assets/her-crossroads.jpg)
+![示例封面](WindPost/Attachments/Her/her-crossroads.jpg)
 
 *正文第一张图片会在未指定封面时作为公众号封面。*
 

@@ -12,8 +12,8 @@ export interface HerTemplateSampleResult {
 }
 
 export const HER_SAMPLE_NOTE_PATH =
-  "Content/Her 模板示例 - 我花了两年，才走出那段狼狈的日子.md";
-export const HER_SAMPLE_ASSET_DIRECTORY = "WindPost/Examples/Her/assets";
+  "WindPost/示例 - Her 公众号.md";
+export const HER_SAMPLE_ASSET_DIRECTORY = "WindPost/Attachments/Her";
 
 const SAMPLE_IMAGES = [
   { path: `${HER_SAMPLE_ASSET_DIRECTORY}/her-crossroads.jpg`, dataUrl: crossroadsImage },
@@ -25,10 +25,8 @@ const SAMPLE_IMAGES = [
 export async function createHerTemplateSample(
   app: App,
 ): Promise<HerTemplateSampleResult> {
-  await ensureFolder(app, "Content");
   await ensureFolder(app, "WindPost");
-  await ensureFolder(app, "WindPost/Examples");
-  await ensureFolder(app, "WindPost/Examples/Her");
+  await ensureFolder(app, "WindPost/Attachments");
   await ensureFolder(app, HER_SAMPLE_ASSET_DIRECTORY);
 
   let restoredAssets = 0;

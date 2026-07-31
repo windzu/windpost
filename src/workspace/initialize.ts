@@ -5,11 +5,11 @@ import longformSample from "./assets/longform-sample.md";
 import shortformSample from "./assets/shortform-sample.md";
 
 export const WINDPOST_BASE_PATH = "WindPost.base";
-export const WINDPOST_CONTENT_DIRECTORY = "Content";
+export const WINDPOST_WORKSPACE_DIRECTORY = "WindPost";
 export const WINDPOST_SAMPLE_PATHS = [
-  "Content/WindPost 示例 - 长内容.md",
-  "Content/Her 模板示例 - 我花了两年，才走出那段狼狈的日子.md",
-  "Content/WindPost 示例 - 小红书.md",
+  "WindPost/示例 - 通用长内容.md",
+  "WindPost/示例 - Her 公众号.md",
+  "WindPost/示例 - 小红书.md",
 ] as const;
 
 export interface WindPostWorkspaceStatus {
@@ -44,7 +44,7 @@ export async function getWindPostWorkspaceStatus(
 export async function initializeWindPostWorkspace(
   app: App,
 ): Promise<WindPostWorkspaceResult> {
-  await ensureFolder(app, WINDPOST_CONTENT_DIRECTORY);
+  await ensureFolder(app, WINDPOST_WORKSPACE_DIRECTORY);
 
   let createdFiles = 0;
   let existingFiles = 0;

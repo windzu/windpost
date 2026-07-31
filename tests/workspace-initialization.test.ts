@@ -13,7 +13,7 @@ test("WindPost Base keeps only the irreducible publishing workflow fields", asyn
   const propertyIds = [...template.matchAll(/^  note\.([a-z_]+):$/gm)]
     .map((match) => match[1]);
 
-  assert.match(template, /file\.folder == "Content"/);
+  assert.match(template, /file\.folder == "WindPost"/);
   assert.deepEqual(propertyIds, ["stage", "channels", "published_to"]);
   assert.match(template, /name: 创作中/);
   assert.match(template, /name: 待发布/);
@@ -34,7 +34,7 @@ test("longform sample works from minimum metadata and includes a WeChat cover", 
   assert.equal(frontmatter.date, undefined);
   assert.equal(frontmatter.summary, undefined);
   assert.match(markdown, /^# WindPost 长内容示例$/m);
-  assert.match(markdown, /!\[示例封面\]\(WindPost\/Examples\/Her\/assets\/her-crossroads\.jpg\)/);
+  assert.match(markdown, /!\[示例封面\]\(WindPost\/Attachments\/Her\/her-crossroads\.jpg\)/);
 });
 
 test("shortform sample derives its cover text and title without extra fields", async () => {

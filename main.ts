@@ -65,7 +65,7 @@ export default class WindPostPlugin extends Plugin {
 
     this.addCommand({
       id: "create-her-template-sample",
-      name: "创建并预览 Her 模板示例",
+      name: "创建并预览 Her 示例文章",
       callback: () => void this.openHerTemplateSample(),
     });
 
@@ -158,10 +158,10 @@ export default class WindPostPlugin extends Plugin {
       const restored = result.restoredAssets > 0
         ? `，补齐 ${result.restoredAssets} 张配图`
         : "";
-      new Notice(`WindPost: Her 模板示例${action}${restored}`);
+      new Notice(`WindPost: Her 示例文章${action}${restored}`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      new Notice(`WindPost: 创建 Her 模板示例失败：${message}`, 8000);
+      new Notice(`WindPost: 创建 Her 示例文章失败：${message}`, 8000);
     }
   }
 
