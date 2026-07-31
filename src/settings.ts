@@ -166,7 +166,14 @@ export class WindPostSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("公众号模板")
-      .setDesc("内置 Anthropic 与 Her；Agent 创建的模板放到 Vault 的 WindPost/Templates/WeChat/<template-id>/，通过发布中心选择。");
+      .setDesc("内置 Anthropic 与 Her；Agent 创建的模板放到 Vault 的 WindPost/Templates/WeChat/<template-id>/，通过发布中心选择。")
+      .addButton((button) => button
+        .setButtonText("创建 Her 示例")
+        .onClick(async () => {
+          button.setDisabled(true).setButtonText("创建中…");
+          await this.plugin.openHerTemplateSample();
+          button.setDisabled(false).setButtonText("创建 Her 示例");
+        }));
 
     // ---------- 小红书 ----------
     containerEl.createEl("h3", { text: "小红书" });
