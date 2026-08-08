@@ -7,6 +7,7 @@ export default defineConfig(
     "node_modules/**",
     "main.js",
     "skills/**",
+    "*.d.cts",
   ]),
   {
     languageOptions: {
@@ -20,6 +21,7 @@ export default defineConfig(
             "esbuild.config.mjs",
             "manifest.json",
             "wechat-template-validator.cjs",
+            "wechat-template-validation.cjs",
             "tests/wechat-template-validator.test.cjs",
             "scripts/check-release.cjs",
           ],
@@ -51,7 +53,7 @@ export default defineConfig(
     },
   },
   {
-    files: ["scripts/**"],
+    files: ["scripts/**", "wechat-template-validator.cjs"],
     rules: {
       "obsidianmd/rule-custom-message": "off",
     },

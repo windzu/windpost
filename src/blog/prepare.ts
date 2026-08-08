@@ -1,4 +1,3 @@
-import * as path from "path";
 import { normalizePath, type App, type TFile } from "obsidian";
 import YAML from "yaml";
 
@@ -167,7 +166,9 @@ function normalizeDate(value: unknown): string {
 }
 
 function basename(value: string): string {
-  return path.posix.basename(normalizePath(value), path.posix.extname(value));
+  const name = normalizePath(value).split("/").pop() || "";
+  const extensionStart = name.lastIndexOf(".");
+  return extensionStart > 0 ? name.slice(0, extensionStart) : name;
 }
 
 function slugify(value: string): string {

@@ -1,5 +1,5 @@
 import { normalizePath, type App } from "obsidian";
-import { validateTemplateFiles } from "../../wechat-template-validator.cjs";
+import { validateTemplateFiles } from "../../wechat-template-validation.cjs";
 import anthropicCss from "../themes/markdown-style/anthropic.css";
 import resetCss from "../themes/markdown-style/reset.css";
 import herCss from "../themes/wechat/her.css";
