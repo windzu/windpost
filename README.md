@@ -4,6 +4,11 @@
 
 WindPost 以本地 Obsidian vault 为唯一内容源，将同一篇 Markdown 笔记转换并发布到 Blog 和微信公众号。项目目标不是建设一个通用社交媒体管理平台，而是为个人长期内容创作提供一条可控、可维护、可迁移的发布链路。
 
+## 文档
+
+- [使用说明：安装、初始化、公众号配置与发布](docs/USER_GUIDE.md)
+- [公众号自定义模板规范](docs/WECHAT_TEMPLATE_SPEC.md)
+
 ## 背景
 
 过去的内容生产链路以 Notion 为知识库，并依赖多个工具分别发布公众号和 Blog。随着知识库迁移到 Obsidian，原有工具出现了几个问题：
@@ -144,11 +149,8 @@ WindScroll，私人 vault 也不会进入公开仓库。
 - `wechat_author`、`wechat_digest`、`wechat_source_url`：作者、摘要和「阅读原文」地址；
 - `wechat_open_comment`、`wechat_fans_only_comment`：评论开关。
 
-首次使用公众号发布前，在 WindPost 设置中填写 AppID，并通过 Obsidian SecretStorage
-选择 AppSecret。两者可在「微信开发者平台 → 我的业务 → 公众号 → 基础信息」中配置；
-同时需要在「基础信息 → 开发密钥」中，将运行 Obsidian 这台设备当前网络的出口公网
-IP 加入接口白名单。该方案不需要公网服务器或入站端口。设置页的「测试官方 API」
-只读取草稿数量，不会创建或修改草稿。
+首次使用公众号发布前，需要配置 AppID、AppSecret 与 API IP 白名单。具体入口、
+文章字段、发布步骤和故障排查见[使用说明](docs/USER_GUIDE.md)。
 
 创建草稿时，正文中的本地或外部图片先通过官方素材接口上传并替换为微信图片 URL；
 封面单独上传为永久素材，通过 `thumb_media_id` 绑定到草稿，不会插入正文。WindPost

@@ -1,6 +1,6 @@
 {
   "name": "obsidian-windpost",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Publish the current Obsidian note to Blog and WeChat.",
   "main": "main.js",
   "type": "module",
