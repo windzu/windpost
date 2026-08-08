@@ -2,6 +2,7 @@ import * as path from "node:path";
 import { normalizePath, TFile, type App } from "obsidian";
 import YAML from "yaml";
 import { normalizeWechatCoverReference } from "./html";
+import { normalizeWechatMetadataText } from "./metadata";
 import type { WechatAssetSource, WechatPost } from "./types";
 
 interface PreparedWechatContent extends Omit<WechatPost, "contentHtml"> {
@@ -29,13 +30,15 @@ export function prepareWechatContent({
   defaultAuthor?: string;
 }): PreparedWechatContent {
   const { frontmatter, body } = splitFrontmatter(markdown);
-  const title = text(frontmatter.title) || firstHeading(body) || basename(sourcePath);
-  const author = text(frontmatter.wechat_author)
-    || text(frontmatter.author)
-    || defaultAuthor.trim();
-  const digest = text(frontmatter.wechat_digest)
-    || text(frontmatter.summary)
-    || text(frontmatter.description);
+  const title = metadataText(frontmatter.title)
+    || normalizeWechatMetadataText(firstHeading(body))
+    || normalizeWechatMetadataText(basename(sourcePath));
+  const author = metadataText(frontmatter.wechat_author)
+    || metadataText(frontmatter.author)
+    || normalizeWechatMetadataText(defaultAuthor);
+  const digest = metadataText(frontmatter.wechat_digest)
+    || metadataText(frontmatter.summary)
+    || metadataText(frontmatter.description);
   const layoutDate = text(frontmatter.date) || sourceCreatedDate(app, sourcePath);
   validateMetadata(title, author, digest);
   const contentSourceUrl = text(frontmatter.wechat_source_url)
@@ -180,6 +183,10 @@ function firstHeading(markdown: string): string {
 
 function text(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function metadataText(value: unknown): string {
+  return typeof value === "string" ? normalizeWechatMetadataText(value) : "";
 }
 
 function countText(value: string): number {
