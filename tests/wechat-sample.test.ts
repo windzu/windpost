@@ -51,11 +51,19 @@ test("bundles the complete Her reference article and structural coverage", async
   assert.equal((html.match(/class="windpost-block windpost-preface"/g) || []).length, 1);
   assert.equal((html.match(/class="windpost-block windpost-note"/g) || []).length, 2);
   assert.equal((html.match(/class="windpost-block windpost-reading"/g) || []).length, 1);
+  assert.equal((html.match(/class="windpost-reading-point"/g) || []).length, 5);
+  const readingBlock = html.match(
+    /<section class="windpost-block windpost-reading"[\s\S]*?<\/section>/,
+  )?.[0] || "";
+  assert.doesNotMatch(readingBlock, /<(?:ul|ol|li)\b/);
   assert.equal((html.match(/class="windpost-block windpost-podcast"/g) || []).length, 1);
   assert.equal((html.match(/class="windpost-block windpost-end"/g) || []).length, 1);
   assert.equal((html.match(/<img\b/g) || []).length, 4);
   assert.equal((html.match(/<figcaption>/g) || []).length, 4);
   assert.equal((html.match(/class="windpost-cropped-image"/g) || []).length, 2);
+  assert.doesNotMatch(html, /<ul>\s+<li/);
+  assert.doesNotMatch(html, /<\/li>\s+<li/);
+  assert.doesNotMatch(html, /<\/li>\s+<\/ul>/);
   assert.doesNotMatch(html, /\[!windpost-/);
 });
 

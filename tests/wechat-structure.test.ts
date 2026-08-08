@@ -48,6 +48,11 @@ test("turns WindPost directives into stable semantic sections", async () => {
 >
 > 说明。
 
+> [!windpost-reading]
+>
+> - 第一条
+> - 第二条
+
 > [!windpost-podcast] PODCAST · EP01
 >
 > ### 《节目》
@@ -61,6 +66,13 @@ test("turns WindPost directives into stable semantic sections", async () => {
 
   assert.match(html, /class="windpost-block windpost-preface"/);
   assert.match(html, /class="windpost-block windpost-note"/);
+  assert.match(html, /class="windpost-block windpost-reading"/);
+  assert.equal((html.match(/class="windpost-reading-point"/g) || []).length, 2);
+  assert.equal((html.match(/class="windpost-reading-bullet"/g) || []).length, 2);
+  assert.doesNotMatch(
+    html.match(/class="windpost-block windpost-reading"[\s\S]*?<\/section>/)?.[0] || "",
+    /<(?:ul|ol|li)\b/,
+  );
   assert.match(html, /class="windpost-block windpost-podcast"/);
   assert.match(html, /class="windpost-block windpost-end"/);
   assert.match(html, /class="windpost-chapter" data-windpost-part="01"/);

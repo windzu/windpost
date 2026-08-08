@@ -1,21 +1,19 @@
-import { normalizePath, requestUrl, TFile, type App } from "obsidian";
-import { extractImageSources, isWechatHostedImage, sourceToAsset } from "./html";
-import type {
-  WechatAssetSource,
-  WechatBrowserImage,
-  WechatBrowserPayload,
-  WechatPost,
-} from "./types";
+import { requestUrl, TFile, type App } from "obsidian";
+import {
+  extractImageSources,
+  isWechatHostedImage,
+  replaceImageSources,
+  sourceToAsset,
+} from "./html";
+import { buildWechatArticle } from "./article";
+import type { WechatApiClient, WechatMultipartFile } from "./api";
+import type { WechatAssetSource, WechatDraftResult, WechatPost } from "./types";
+import { validateWechatContent } from "./validation";
 
 interface LoadedImage {
   data: ArrayBuffer;
   contentType: string;
   filename: string;
-}
-
-interface OutputDir {
-  vaultPath: string;
-  absolutePath: string;
 }
 
 interface DecodedImage {
@@ -25,46 +23,50 @@ interface DecodedImage {
   close: () => void;
 }
 
+export interface WechatDraftClient {
+  uploadArticleImage(file: WechatMultipartFile): Promise<string>;
+  uploadPermanentImage(file: WechatMultipartFile): Promise<string>;
+  addDraft(article: Record<string, unknown>): Promise<string>;
+}
+
 const ARTICLE_IMAGE_LIMIT = 1024 * 1024;
 
-export async function exportWechatBrowserPayload({
+export async function publishWechatDraft({
   app,
+  client,
   post,
-  sourcePath,
 }: {
   app: App;
+  client: WechatApiClient | WechatDraftClient;
   post: WechatPost;
-  sourcePath: string;
-}): Promise<Omit<WechatBrowserPayload, "userDataDir">> {
-  validateContent(post.contentHtml);
-  const outputDir = await createOutputDir(app, sourcePath);
+}): Promise<WechatDraftResult> {
+  validateWechatContent(post.contentHtml);
   const sources = extractImageSources(post.contentHtml);
-  const images: WechatBrowserImage[] = [];
+  const coverSource = post.coverSource || sourceToAsset(sources[0] || "");
+  if (!coverSource) {
+    throw new Error("公众号草稿需要封面。请设置 wechat_cover，或在正文中加入图片。");
+  }
+  const cover = await normalizeArticleImage(await loadImage(app, coverSource));
+  const replacements = new Map<string, string>();
+  let uploadedImages = 0;
 
-  for (const [index, source] of sources.entries()) {
+  for (const source of sources) {
     if (isWechatHostedImage(source)) continue;
     const asset = sourceToAsset(source);
     if (!asset) throw new Error(`公众号正文包含无法上传的图片地址：${source}`);
     const image = await normalizeArticleImage(await loadImage(app, asset));
-    const filename = `${String(index + 1).padStart(2, "0")}-${safeFilename(image.filename)}`;
-    const path = await writeImage(app, outputDir, filename, image.data);
-    images.push({ source, path });
+    const url = await client.uploadArticleImage(toMultipartFile(image));
+    replacements.set(source, url);
+    uploadedImages += 1;
   }
 
-  const coverSource = post.coverSource || sourceToAsset(sources[0] || "");
-  if (!coverSource) {
-    throw new Error("公众号草稿需要封面。请设置 frontmatter 的 wechat_cover，或在正文中加入图片。");
-  }
-  const cover = await normalizeArticleImage(await loadImage(app, coverSource));
-  const coverFilename = `cover-${safeFilename(cover.filename)}`;
-  const coverPath = await writeImage(app, outputDir, coverFilename, cover.data);
+  const content = replaceImageSources(post.contentHtml, replacements);
+  validateWechatContent(content);
+  const thumbMediaId = await client.uploadPermanentImage(toMultipartFile(cover));
+  const article = buildWechatArticle(post, content, thumbMediaId);
+  const mediaId = await client.addDraft(article);
 
-  return {
-    ...post,
-    images,
-    coverPath,
-    outputDir: outputDir.absolutePath,
-  };
+  return { mediaId, uploadedImages };
 }
 
 async function loadImage(app: App, source: WechatAssetSource): Promise<LoadedImage> {
@@ -110,29 +112,31 @@ async function normalizeArticleImage(image: LoadedImage): Promise<LoadedImage> {
     height = Math.round(height * ratio);
   }
 
-  for (let attempt = 0; attempt < 6; attempt += 1) {
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("图片转换失败：Canvas 初始化失败。");
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, width, height);
-    context.drawImage(decoded.source, 0, 0, width, height);
-    const quality = Math.max(0.55, 0.9 - attempt * 0.08);
-    const blob = await canvasToBlob(canvas, "image/jpeg", quality);
-    if (blob.size < ARTICLE_IMAGE_LIMIT) {
-      decoded.close();
-      return {
-        data: await blob.arrayBuffer(),
-        contentType: "image/jpeg",
-        filename: replaceExtension(image.filename, "jpg"),
-      };
+  try {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("图片转换失败：Canvas 初始化失败。");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, width, height);
+      context.drawImage(decoded.source, 0, 0, width, height);
+      const quality = Math.max(0.55, 0.9 - attempt * 0.08);
+      const blob = await canvasToBlob(canvas, "image/jpeg", quality);
+      if (blob.size < ARTICLE_IMAGE_LIMIT) {
+        return {
+          data: await blob.arrayBuffer(),
+          contentType: "image/jpeg",
+          filename: replaceExtension(image.filename, "jpg"),
+        };
+      }
+      width = Math.max(320, Math.round(width * 0.82));
+      height = Math.max(320, Math.round(height * 0.82));
     }
-    width = Math.max(320, Math.round(width * 0.82));
-    height = Math.max(320, Math.round(height * 0.82));
+  } finally {
+    decoded.close();
   }
-  decoded.close();
   throw new Error(`图片压缩后仍超过 1 MB：${image.filename}`);
 }
 
@@ -165,48 +169,13 @@ async function decodeImage(image: LoadedImage): Promise<DecodedImage> {
   }
 }
 
-function validateContent(content: string): void {
-  if (Array.from(content).length >= 20_000) {
-    throw new Error("公众号正文超过 20,000 字符，无法创建草稿。");
-  }
-  if (new TextEncoder().encode(content).byteLength >= 1024 * 1024) {
-    throw new Error("公众号正文 HTML 超过 1 MB，无法创建草稿。");
-  }
-}
-
-async function createOutputDir(app: App, sourcePath: string): Promise<OutputDir> {
-  const slug = sourcePath
-    .replace(/\.md$/i, "")
-    .replace(/[^\p{L}\p{N}._-]+/gu, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 80) || "untitled";
-  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\..+$/, "");
-  const vaultPath = normalizePath(`.windpost/wechat/${slug}-${stamp}`);
-  await ensureFolder(app, ".windpost");
-  await ensureFolder(app, ".windpost/wechat");
-  await ensureFolder(app, vaultPath);
-
-  const adapter = app.vault.adapter as typeof app.vault.adapter & {
-    getBasePath?: () => string;
+function toMultipartFile(image: LoadedImage): WechatMultipartFile {
+  return {
+    field: "media",
+    filename: image.filename,
+    contentType: image.contentType,
+    data: image.data,
   };
-  const basePath = adapter.getBasePath?.();
-  if (!basePath) throw new Error("公众号草稿发布仅支持本地桌面 vault。");
-  return { vaultPath, absolutePath: `${basePath}/${vaultPath}` };
-}
-
-async function ensureFolder(app: App, path: string): Promise<void> {
-  if (!(await app.vault.adapter.exists(path))) await app.vault.createFolder(path);
-}
-
-async function writeImage(
-  app: App,
-  outputDir: OutputDir,
-  filename: string,
-  data: ArrayBuffer,
-): Promise<string> {
-  const vaultPath = normalizePath(`${outputDir.vaultPath}/${filename}`);
-  await app.vault.adapter.writeBinary(vaultPath, data);
-  return `${outputDir.absolutePath}/${filename}`;
 }
 
 function decodeDataUrl(value: string): LoadedImage {
@@ -269,10 +238,6 @@ function extensionFromMime(contentType: string): string {
 
 function replaceExtension(value: string, extension: string): string {
   return value.replace(/\.[^.]+$/, "") + `.${extension}`;
-}
-
-function safeFilename(value: string): string {
-  return value.replace(/[^\p{L}\p{N}._-]+/gu, "-");
 }
 
 function responseHeader(headers: Record<string, string>, name: string): string | undefined {

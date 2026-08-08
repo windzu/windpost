@@ -69,6 +69,33 @@ function directiveHeader(type: WindpostBlockType, title: string): Element[] {
   return title ? [textElement('p', 'windpost-block-label', title)] : []
 }
 
+function readingPoint(node: Element): Element {
+  const children = node.children.flatMap(child => (
+    child.type === 'element' && child.tagName === 'p' ? child.children : [child]
+  ))
+  return {
+    type: 'element',
+    tagName: 'p',
+    properties: { className: ['windpost-reading-point'] },
+    children: [
+      textElement('span', 'windpost-reading-bullet', '•'),
+      ...children,
+    ],
+  }
+}
+
+function normalizeReadingContent(children: ElementContent[]): ElementContent[] {
+  return children.flatMap((child) => {
+    if (child.type !== 'element' || (child.tagName !== 'ul' && child.tagName !== 'ol')) {
+      return [child]
+    }
+    const items = child.children.filter((item): item is Element => (
+      item.type === 'element' && item.tagName === 'li'
+    ))
+    return items.map(readingPoint)
+  })
+}
+
 function decoratePullQuote(node: Element) {
   const paragraph = node.children.find((child): child is Element => (
     child.type === 'element' && child.tagName === 'p'
@@ -119,9 +146,10 @@ function transformDirectives(tree: Root) {
       className: ['windpost-block', `windpost-${type}`],
       dataWindpostBlock: type,
     }
+    const content = node.children.filter(child => child !== first)
     node.children = [
       ...directiveHeader(type, title),
-      ...node.children.filter(child => child !== first),
+      ...(type === 'reading' ? normalizeReadingContent(content) : content),
     ]
   })
 }

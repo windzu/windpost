@@ -196,6 +196,13 @@ const rehypeWechatListNormalize: Plugin<[], Root> = () => (tree) => {
   })
 
   visit(tree, 'element', (node: Element) => {
+    if (node.tagName !== 'ul' && node.tagName !== 'ol') return
+    node.children = node.children.filter(child => (
+      child.type !== 'text' || child.value.trim().length > 0
+    ))
+  })
+
+  visit(tree, 'element', (node: Element) => {
     if (node.tagName !== 'li') {
       return
     }

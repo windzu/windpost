@@ -311,21 +311,23 @@
   border: 0;
 }
 
-#bm-md .windpost-reading ul,
-#bm-md .windpost-reading ol {
-  margin: 0;
-  padding: 0;
-  background-color: transparent;
-  list-style-position: outside;
-}
-
-#bm-md .windpost-reading li {
-  margin: 0 0 18px 20px;
-  padding-left: 3px;
+#bm-md .windpost-reading-point {
+  position: relative;
+  margin: 0 0 18px;
+  padding-left: 18px;
   color: #666b74;
   font-size: 15.5px;
   font-weight: 300;
   line-height: 2;
+}
+
+#bm-md .windpost-reading-bullet {
+  position: absolute;
+  left: 1px;
+  top: 0;
+  color: #3156b4;
+  font-size: 20px;
+  line-height: 1.55;
 }
 
 /* Podcast 是结构组件，不再退化成普通 h3。 */
