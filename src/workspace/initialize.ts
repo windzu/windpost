@@ -2,14 +2,12 @@ import { normalizePath, TFile, type App } from "obsidian";
 import { createHerTemplateSample } from "../wechat/sample";
 import baseTemplate from "./assets/WindPost.base";
 import longformSample from "./assets/longform-sample.md";
-import shortformSample from "./assets/shortform-sample.md";
 
 export const WINDPOST_BASE_PATH = "WindPost.base";
 export const WINDPOST_WORKSPACE_DIRECTORY = "WindPost";
 export const WINDPOST_SAMPLE_PATHS = [
   "WindPost/示例 - 通用长内容.md",
   "WindPost/示例 - Her 公众号.md",
-  "WindPost/示例 - 小红书.md",
 ] as const;
 
 export interface WindPostWorkspaceStatus {
@@ -58,14 +56,6 @@ export async function initializeWindPostWorkspace(
     longformSample,
   );
   if (longform.created) createdFiles += 1;
-  else existingFiles += 1;
-
-  const shortform = await ensureTextFile(
-    app,
-    WINDPOST_SAMPLE_PATHS[2],
-    shortformSample,
-  );
-  if (shortform.created) createdFiles += 1;
   else existingFiles += 1;
 
   const her = await createHerTemplateSample(app);

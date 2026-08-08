@@ -37,19 +37,6 @@ test("longform sample works from minimum metadata and includes a WeChat cover", 
   assert.match(markdown, /!\[示例封面\]\(WindPost\/Attachments\/Her\/her-crossroads\.jpg\)/);
 });
 
-test("shortform sample derives its cover text and title without extra fields", async () => {
-  const markdown = await readFile(assetUrl("shortform-sample.md"), "utf8");
-  const frontmatter = parseFrontmatter(markdown);
-
-  assert.equal(frontmatter.stage, "draft");
-  assert.deepEqual(frontmatter.channels, ["xiaohongshu"]);
-  assert.deepEqual(frontmatter.published_to, []);
-  assert.equal(frontmatter.title, undefined);
-  assert.equal(frontmatter.type, undefined);
-  assert.equal(frontmatter.cover_text, undefined);
-  assert.match(markdown, /^# 我如何把一篇长文变成小红书$/m);
-});
-
 test("Her sample uses the same minimum common workflow fields", async () => {
   const markdown = await readFile(
     new URL("../src/wechat/sample-assets/her-sample.md", import.meta.url),
