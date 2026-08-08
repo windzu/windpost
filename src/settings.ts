@@ -49,7 +49,7 @@ export class WindPostSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("首次使用初始化")
-      .setDesc("创建根目录 WindPost.base、WindPost 内容目录和三篇渠道示例。只补齐缺失文件，不覆盖已有内容。")
+      .setDesc("创建根目录 WindPost.base、WindPost 内容目录和两篇渠道示例。只补齐缺失文件，不覆盖已有内容。")
       .addButton((button) => button
         .setButtonText("初始化/补齐")
         .setCta()
