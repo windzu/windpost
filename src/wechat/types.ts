@@ -19,6 +19,11 @@ export interface WechatDraftResult {
   uploadedImages: number;
 }
 
+export interface WechatPublishProgress {
+  percent: number;
+  label: string;
+}
+
 export interface WechatConnectionResult {
   draftCount: number;
 }

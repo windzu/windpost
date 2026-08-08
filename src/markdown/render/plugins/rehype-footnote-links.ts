@@ -97,7 +97,7 @@ const rehypeFootnoteLinks: Plugin<[Options?], Root> = (options = {}) => {
                 children: [{ type: 'text', value: link.href }],
               },
             ],
-          } as Element)),
+          })),
         },
       ],
     }

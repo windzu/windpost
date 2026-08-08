@@ -1,3 +1,4 @@
+import { requestUrl } from "obsidian";
 import type { BlogFile } from "./prepare";
 
 export interface GitHubPublishOptions {
@@ -81,21 +82,48 @@ export async function publishFilesToGitHub(options: GitHubPublishOptions): Promi
   };
 }
 
-async function request<T = unknown>(pathname: string, token: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`https://api.github.com${pathname}`, {
-    ...init,
+interface GitHubRequestOptions {
+  method?: "GET" | "POST" | "PATCH";
+  body?: string;
+}
+
+async function request<T = unknown>(
+  pathname: string,
+  token: string,
+  options: GitHubRequestOptions = {},
+): Promise<T> {
+  const response = await requestUrl({
+    url: `https://api.github.com${pathname}`,
+    method: options.method ?? "GET",
     headers: {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
       "X-GitHub-Api-Version": API_VERSION,
-      ...init.headers,
     },
+    contentType: "application/json",
+    body: options.body,
+    throw: false,
   });
-  if (!response.ok) {
-    const detail = await response.json().catch(() => null) as { message?: string } | null;
-    throw new Error(`GitHub API ${response.status}：${detail?.message || response.statusText}`);
+  const parsed = parseJson(response.text);
+  if (response.status >= 400) {
+    const detail = isRecord(parsed) && typeof parsed.message === "string"
+      ? parsed.message
+      : "未知错误";
+    throw new Error(`GitHub API ${response.status}：${detail}`);
   }
   if (response.status === 204) return undefined as T;
-  return await response.json() as T;
+  return parsed as T;
+}
+
+function parseJson(value: string): unknown {
+  if (!value.trim()) return undefined;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    throw new Error("GitHub API 返回了无法解析的响应。");
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

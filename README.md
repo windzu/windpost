@@ -9,6 +9,19 @@ WindPost 以本地 Obsidian vault 为唯一内容源，将同一篇 Markdown 笔
 - [使用说明：安装、初始化、公众号配置与发布](docs/USER_GUIDE.md)
 - [公众号自定义模板规范](docs/WECHAT_TEMPLATE_SPEC.md)
 
+## 安装
+
+WindPost 目前面向 macOS 上的 Obsidian Desktop 1.12.0 及以上版本。
+
+- 正式进入 Obsidian 社区插件目录后，可在「设置 → 第三方插件 → 浏览」中搜索
+  `WindPost` 安装；
+- 社区审核完成前，可从 [GitHub Releases](https://github.com/windzu/windpost/releases)
+  下载 `main.js`、`manifest.json`、`styles.css`，放入 Vault 的
+  `.obsidian/plugins/windpost/` 后重新加载 Obsidian；
+- 开发者也可以获取源码后执行项目中的构建与测试脚本。
+
+升级前建议保留 Vault 备份。初始化只补齐缺失文件，不会覆盖已有内容。
+
 ## 背景
 
 过去的内容生产链路以 Notion 为知识库，并依赖多个工具分别发布公众号和 Blog。随着知识库迁移到 Obsidian，原有工具出现了几个问题：
@@ -87,6 +100,21 @@ WindScroll 可以根据发布链路需要直接调整，不把当前 Notion adap
 
 平台页面变化造成的适配问题应隔离在对应发布实现中，不影响 Obsidian 内容读取和
 其他渠道。
+
+## 隐私与安全
+
+- WindPost 只读取用户主动打开并预览/发布的笔记及其中引用的本地附件；只有用户点击
+  初始化时才会在 Vault 中补齐 `WindPost.base`、示例文章与示例配图；
+- Blog 发布会连接 `api.github.com`，公众号发布会连接 `api.weixin.qq.com`；文章引用
+  公开外部图片时，插件还会请求对应图片地址；
+- GitHub Token 与微信公众号 AppSecret 由 Obsidian SecretStorage 保存，不写入普通
+  插件配置、Markdown 或仓库；
+- WindPost 不提供自建中转服务器，不收集遥测，不展示广告，不包含付费或推广机制；
+- WindPost 不安装浏览器扩展，也不控制微信公众号后台。它只调用微信官方 API 创建
+  草稿，最终群发必须由用户人工确认。
+
+安全问题请通过 GitHub 仓库的 Security Advisory 私下报告；一般缺陷和功能建议使用
+[GitHub Issues](https://github.com/windzu/windpost/issues)。
 
 ## 初步实现分层
 
@@ -172,4 +200,5 @@ Her 示例为完整文章「我花了两年，才走出那段狼狈的日子」�
 卡片。工作区初始化会自动创建该示例，也可从命令面板单独执行「创建并预览 Her
 示例文章」；重复执行不会覆盖已有笔记或配图。内置图片已压缩并移除 EXIF/GPS 元数据。
 
-下一步是在真实平台页面和账号权限差异中持续收敛错误提示与发布体验。
+当前版本已经完成 Blog 提交与微信公众号官方 API 草稿创建闭环；不同账号权限和网络
+环境下的兼容问题会继续通过 Issue 跟踪。

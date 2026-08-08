@@ -12,15 +12,27 @@ WindPost 是运行在 Obsidian 桌面端中的个人内容发布插件。目前�
 
 ## 1. 安装
 
-WindPost 尚未进入 Obsidian 社区插件市场，也没有正式 Release。当前需要从源码构建：
+### 1.1 Obsidian 社区插件
 
-1. 获取本仓库最新的 `main` 分支；
-2. 执行 `pnpm install` 和 `pnpm build`；
-3. 在 Vault 的 `.obsidian/plugins/windpost/` 中放入 `main.js`、`manifest.json` 和
-   `styles.css`；
+WindPost 通过社区审核后，可在「设置 → 第三方插件 → 浏览」中搜索 `WindPost`，点击
+「安装」并启用。这是普通用户的首选方式，后续版本也由 Obsidian 提示升级。
+
+### 1.2 GitHub Release 手动安装
+
+社区审核完成前，或需要安装指定版本时：
+
+1. 打开 [WindPost Releases](https://github.com/windzu/windpost/releases)，进入目标版本；
+2. 下载该版本附件中的 `main.js`、`manifest.json`、`styles.css`；
+3. 将三个文件放入 Vault 的 `.obsidian/plugins/windpost/`；
 4. 重新加载 Obsidian，在「设置 → 第三方插件」中启用 WindPost。
 
-升级源码版本后，重新构建并替换以上三个文件，再重新加载插件。
+目录名必须是 `windpost`。升级时替换以上三个文件并重新加载插件；升级前建议保留
+Vault 备份。
+
+### 1.3 从源码构建
+
+只有参与开发时才需要获取仓库源码，并使用 `pnpm build` 生成 `main.js`。提交变更前
+应执行 `pnpm check`，确保官方 lint、测试、构建、依赖审计与发布产物校验全部通过。
 
 ## 2. 初始化内容库
 
@@ -225,10 +237,14 @@ WindPost 内置：
 | 图片下载或解码失败 | 检查外部图片是否可公开访问，或改用 Vault 内的 JPG/PNG 图片 |
 | 换网络后突然连接失败 | 家庭宽带、公司网络或代理出口已变化，重新测试并更新 API IP 白名单 |
 
-## 9. 安全与边界
+## 9. 安全、隐私与网络请求
 
+- WindPost 只读取当前打开的笔记及其引用附件；初始化操作只补齐缺失的标准文件，
+  不覆盖已有内容；
 - AppSecret 保存在 Obsidian SecretStorage；
 - WindPost 从本机直接请求微信官方 API，不经过 WindPost 自建服务器；
+- Blog 发布直接请求 GitHub API；外部图片需要从原始图片地址下载后再转存到微信；
+- 插件不收集遥测，不包含广告、付费功能或推广机制；
 - 不需要安装浏览器扩展，也不使用 Playwright 控制公众号后台；
 - 封面会作为永久素材写入公众号素材库；
 - WindPost 只创建草稿，不执行最终群发。

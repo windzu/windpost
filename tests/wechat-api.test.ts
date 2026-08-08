@@ -38,7 +38,9 @@ test("WechatApiClient uses one stable token across the official draft flow", asy
   assert.equal(await client.addDraft({ thumb_media_id: "cover-media-id" }), "draft-id");
 
   assert.equal(requests.filter((item) => item.url.endsWith("/cgi-bin/stable_token")).length, 1);
-  const tokenBody = JSON.parse(String(requests[0].body));
+  const firstBody = requests[0].body;
+  if (typeof firstBody !== "string") assert.fail("token 请求必须使用 JSON 字符串 body");
+  const tokenBody: unknown = JSON.parse(firstBody);
   assert.deepEqual(tokenBody, {
     grant_type: "client_credential",
     appid: "appid",

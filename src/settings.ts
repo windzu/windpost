@@ -45,7 +45,7 @@ export class WindPostSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl("h3", { text: "WindPost 工作区" });
+    new Setting(containerEl).setName("工作区").setHeading();
 
     new Setting(containerEl)
       .setName("首次使用初始化")
@@ -59,7 +59,7 @@ export class WindPostSettingTab extends PluginSettingTab {
           button.setDisabled(false).setButtonText("初始化/补齐");
         }));
 
-    containerEl.createEl("h3", { text: "Blog" });
+    new Setting(containerEl).setName("Blog").setHeading();
 
     new Setting(containerEl)
       .setName("GitHub owner")
@@ -125,7 +125,7 @@ export class WindPostSettingTab extends PluginSettingTab {
         }));
 
     // ---------- 微信公众号 ----------
-    containerEl.createEl("h3", { text: "微信公众号" });
+    new Setting(containerEl).setName("微信公众号").setHeading();
 
     new Setting(containerEl)
       .setName("AppID")
@@ -203,7 +203,7 @@ export class WindPostSettingTab extends PluginSettingTab {
       .setDesc("开箱内置 Anthropic 与 Her，初始化工作区后可直接通过示例文章体验，无需自行设计模板。");
 
     // ---------- 默认行为 ----------
-    containerEl.createEl("h3", { text: "默认行为" });
+    new Setting(containerEl).setName("默认行为").setHeading();
 
     new Setting(containerEl)
       .setName("外链转脚注")

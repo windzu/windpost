@@ -1,9 +1,9 @@
 {
   "id": "windpost",
   "name": "WindPost",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "minAppVersion": "1.12.0",
-  "description": "从 Obsidian 将当前笔记发布到 Blog 和微信公众号。",
+  "description": "Publish the current note to a blog or WeChat Official Account draft.",
   "author": "windzu",
   "authorUrl": "https://github.com/windzu",
   "isDesktopOnly": true

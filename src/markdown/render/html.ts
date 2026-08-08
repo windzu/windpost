@@ -1,4 +1,3 @@
-import type { Plugin } from 'unified'
 import type { Platform } from './adapters'
 import juice from 'juice'
 import rehypeExternalLinks from 'rehype-external-links'
@@ -118,14 +117,7 @@ function createProcessor({
   }
 
   const adapterPlugins = getAdapterPlugins(platform, { referenceTitle, wechatLayout })
-  for (const plugin of adapterPlugins) {
-    if (Array.isArray(plugin)) {
-      processor.use(plugin[0] as Plugin, plugin[1])
-    }
-    else {
-      processor.use(plugin as Plugin)
-    }
-  }
+  processor.use(adapterPlugins)
 
   processor.use(rehypeDivToSection)
   processor.use(rehypeWrapTextNodes)

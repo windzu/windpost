@@ -276,6 +276,35 @@
   flex-shrink: 0;
 }
 
+.windpost-publish-progress {
+  min-width: 0;
+  flex: 1;
+  margin-right: 16px;
+}
+
+.windpost-publish-progress-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+  color: #aeb5c0;
+  font-size: 11px;
+}
+
+.windpost-publish-progress-track {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #343943;
+}
+
+.windpost-publish-progress-track > div {
+  height: 100%;
+  border-radius: inherit;
+  background: #60a5fa;
+  transition: width 180ms ease;
+}
+
 .windpost-actions button {
   min-width: 150px;
 }

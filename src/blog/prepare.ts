@@ -104,9 +104,9 @@ function splitFrontmatter(markdown: string) {
   const match = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!match) return { frontmatter: {} as Record<string, unknown>, body: markdown };
   try {
-    const value = YAML.parse(match[1]);
+    const value: unknown = YAML.parse(match[1]);
     return {
-      frontmatter: value && typeof value === "object" ? value as Record<string, unknown> : {},
+      frontmatter: isRecord(value) ? value : {},
       body: markdown.slice(match[0].length),
     };
   } catch {
@@ -147,7 +147,7 @@ function normalizeTags(value: unknown): string[] {
 }
 
 function readingMinutes(markdown: string): number {
-  const plain = markdown.replace(/```[\s\S]*?```/g, " ").replace(/[#*`>!\-_~\[\]()]/g, " ");
+  const plain = markdown.replace(/```[\s\S]*?```/g, " ").replace(/[#*`>!_~[\]()-]/g, " ");
   const cjk = (plain.match(/[\u4e00-\u9fa5]/g) || []).length;
   const words = (plain.replace(/[\u4e00-\u9fa5]/g, " ").match(/\S+/g) || []).length;
   return Math.max(1, Math.round(cjk / 450 + words / 220));
@@ -184,4 +184,8 @@ function safeDecode(value: string): string {
   } catch {
     return value;
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

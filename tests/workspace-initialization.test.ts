@@ -10,7 +10,7 @@ const assetUrl = (name: string) => new URL(
 
 test("WindPost Base keeps only the irreducible publishing workflow fields", async () => {
   const template = await readFile(assetUrl("WindPost.base"), "utf8");
-  const propertyIds = [...template.matchAll(/^  note\.([a-z_]+):$/gm)]
+  const propertyIds = [...template.matchAll(/^ {2}note\.([a-z_]+):$/gm)]
     .map((match) => match[1]);
 
   assert.match(template, /file\.folder == "WindPost"/);

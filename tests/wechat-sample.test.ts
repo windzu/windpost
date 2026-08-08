@@ -4,7 +4,7 @@ import test from "node:test";
 import rehypeStringify from "rehype-stringify";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
-import { unified, type Plugin } from "unified";
+import { unified } from "unified";
 import rehypeFigureWrapper from "../src/markdown/render/plugins/rehype-figure-wrapper";
 import { getAdapterPlugins } from "../src/markdown/render/adapters";
 
@@ -26,7 +26,7 @@ test("bundles the complete Her reference article and structural coverage", async
     .use(remarkParse)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeFigureWrapper);
-  for (const plugin of getAdapterPlugins("wechat", {
+  processor.use(getAdapterPlugins("wechat", {
     wechatLayout: {
       variant: "editorial",
       title: "我花了两年，才走出那段狼狈的日子",
@@ -35,10 +35,7 @@ test("bundles the complete Her reference article and structural coverage", async
       author: "Miki",
       date: "2026-07-31",
     },
-  })) {
-    if (Array.isArray(plugin)) processor.use(plugin[0] as Plugin, plugin[1]);
-    else processor.use(plugin as Plugin);
-  }
+  }));
   const html = String(await processor
     .use(rehypeStringify, { allowDangerousHtml: true })
     .process(body));
