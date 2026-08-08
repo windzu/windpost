@@ -4,6 +4,53 @@
 
 WindPost 以本地 Obsidian vault 为唯一内容源，将同一篇 Markdown 笔记转换并发布到 Blog 和微信公众号。项目目标不是建设一个通用社交媒体管理平台，而是为个人长期内容创作提供一条可控、可维护、可迁移的发布链路。
 
+## English
+
+### Overview
+
+WindPost is a desktop Obsidian plugin for publishing the current Markdown note to a
+GitHub-backed blog or to a WeChat Official Account draft. Obsidian remains the single
+source of truth: WindPost prepares channel-specific content, previews the result, asks
+for confirmation, and then performs the selected API operation. It never sends a
+WeChat mass message.
+
+WindPost currently supports macOS and requires Obsidian Desktop 1.12.0 or later.
+
+### Installation
+
+After WindPost is approved for the Community directory, install it from **Settings →
+Community plugins → Browse**. Until then, download `main.js`, `manifest.json`, and
+`styles.css` from the [latest GitHub release](https://github.com/windzu/windpost/releases/latest),
+place them in `<vault>/.obsidian/plugins/windpost/`, reload Obsidian, and enable
+WindPost under Community plugins.
+
+### Basic usage
+
+1. Open the WindPost publishing center and select **Initialize** on first use. This
+   creates `WindPost.base`, a `WindPost/` content folder, and two editable examples.
+2. Open a Markdown note, select the Blog or WeChat channel, and review the preview.
+3. Configure the selected channel in **Settings → WindPost**, then use its connection
+   test before the first publish.
+4. Confirm the publish action. Blog publishing creates a GitHub commit. WeChat
+   publishing uploads article images and a cover, then creates a draft through the
+   official WeChat API. Final WeChat sending remains a manual action in WeChat.
+
+### Accounts, network use, and privacy
+
+- Blog publishing requires a GitHub repository and a fine-grained token with
+  `Contents: write` access. Requests are sent directly to `api.github.com`.
+- WeChat publishing requires an Official Account AppID, AppSecret, API permissions,
+  and an API IP allowlist entry. Requests are sent directly to `api.weixin.qq.com`.
+- Public external images referenced by an article are downloaded from their original
+  URLs before being uploaded to WeChat.
+- GitHub tokens and WeChat AppSecrets are stored with Obsidian SecretStorage. WindPost
+  has no hosted relay, telemetry, advertising, payment, or browser automation.
+- WindPost reads only the active note and its referenced attachments. Initialization
+  creates missing files inside the vault and does not overwrite existing content.
+
+See the [detailed user guide](docs/USER_GUIDE.md) for complete setup and
+troubleshooting. Report security issues privately through GitHub Security Advisories.
+
 ## 文档
 
 - [使用说明：安装、初始化、公众号配置与发布](docs/USER_GUIDE.md)

@@ -1,6 +1,5 @@
 import esbuild from "esbuild";
 import process from "process";
-import { builtinModules } from "node:module";
 
 const banner = `/*
 WindPost — Obsidian plugin
@@ -27,8 +26,6 @@ const context = await esbuild.context({
     "@lezer/common",
     "@lezer/highlight",
     "@lezer/lr",
-    ...builtinModules,
-    ...builtinModules.map((module) => `node:${module}`),
   ],
   format: "cjs",
   target: "es2020",

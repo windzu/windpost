@@ -1,4 +1,3 @@
-import * as path from "node:path";
 import { normalizePath, TFile, type App } from "obsidian";
 import YAML from "yaml";
 import { normalizeWechatCoverReference } from "./html";
@@ -198,7 +197,9 @@ function countText(value: string): number {
 }
 
 function basename(value: string): string {
-  return path.posix.basename(normalizePath(value), path.posix.extname(value));
+  const name = normalizePath(value).split("/").pop() || "";
+  const extensionStart = name.lastIndexOf(".");
+  return extensionStart > 0 ? name.slice(0, extensionStart) : name;
 }
 
 function sourceCreatedDate(app: App, sourcePath: string): string {
