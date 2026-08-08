@@ -18,8 +18,8 @@ WindPost currently supports macOS and requires Obsidian Desktop 1.12.0 or later.
 
 ### Installation
 
-After WindPost is approved for the Community directory, install it from **Settings →
-Community plugins → Browse**. Until then, download `main.js`, `manifest.json`, and
+Install WindPost from **Settings → Community plugins → Browse** and search for
+`WindPost`. For manual installation, download `main.js`, `manifest.json`, and
 `styles.css` from the [latest GitHub release](https://github.com/windzu/windpost/releases/latest),
 place them in `<vault>/.obsidian/plugins/windpost/`, reload Obsidian, and enable
 WindPost under Community plugins.
@@ -60,9 +60,8 @@ troubleshooting. Report security issues privately through GitHub Security Adviso
 
 WindPost 目前面向 macOS 上的 Obsidian Desktop 1.12.0 及以上版本。
 
-- 正式进入 Obsidian 社区插件目录后，可在「设置 → 第三方插件 → 浏览」中搜索
-  `WindPost` 安装；
-- 社区审核完成前，可从 [GitHub Releases](https://github.com/windzu/windpost/releases)
+- 在「设置 → 第三方插件 → 浏览」中搜索 `WindPost` 安装；
+- 如需手动安装，可从 [GitHub Releases](https://github.com/windzu/windpost/releases)
   下载 `main.js`、`manifest.json`、`styles.css`，放入 Vault 的
   `.obsidian/plugins/windpost/` 后重新加载 Obsidian；
 - 开发者也可以获取源码后执行项目中的构建与测试脚本。

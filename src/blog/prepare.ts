@@ -1,5 +1,6 @@
 import { normalizePath, type App, type TFile } from "obsidian";
 import YAML from "yaml";
+import { arrayBufferToBase64 } from "../base64";
 
 export interface BlogFile {
   path: string;
@@ -91,7 +92,7 @@ export async function prepareBlogPost({
     const data = await app.vault.readBinary(file);
     files.push({
       path: `public/windpost-assets/${slug}/${name}`,
-      content: Buffer.from(data).toString("base64"),
+      content: arrayBufferToBase64(data),
       encoding: "base64",
     });
   }
