@@ -13,9 +13,6 @@ export interface WindPostSettings {
   wechatAccountName: string;
   wechatDefaultAuthor: string;
 
-  xiaohongshuMaxImages: number;
-  xiaohongshuPublishUrl: string;
-
   defaultMarkdownStyle: string;
   enableFootnoteLinks: boolean;
   editDebounceMs: number;
@@ -31,8 +28,6 @@ export const DEFAULT_SETTINGS: WindPostSettings = {
   wechatTemplateId: "builtin:anthropic",
   wechatAccountName: "",
   wechatDefaultAuthor: "",
-  xiaohongshuMaxImages: 9,
-  xiaohongshuPublishUrl: "https://creator.xiaohongshu.com/publish/publish?source=official",
   defaultMarkdownStyle: "anthropic",
   enableFootnoteLinks: true,
   editDebounceMs: 400,
@@ -206,34 +201,6 @@ export class WindPostSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("公众号模板")
       .setDesc("开箱内置 Anthropic 与 Her，初始化工作区后可直接通过示例文章体验，无需自行设计模板。");
-
-    // ---------- 小红书 ----------
-    containerEl.createEl("h3", { text: "小红书" });
-
-    new Setting(containerEl)
-      .setName("最多生成卡片")
-      .setDesc("包含封面。超出卡片容量的文字仍会保留在正文中。")
-      .addText((text) => text
-        .setPlaceholder("9")
-        .setValue(String(this.plugin.settings.xiaohongshuMaxImages))
-        .onChange(async (value) => {
-          const n = parseInt(value, 10);
-          if (Number.isFinite(n) && n >= 1 && n <= 18) {
-            this.plugin.settings.xiaohongshuMaxImages = n;
-            await this.plugin.saveSettings();
-          }
-        }));
-
-    new Setting(containerEl)
-      .setName("创作服务平台地址")
-      .setDesc("用于打开图文发布页。WindPost 只自动填写，不会点击最终发布。")
-      .addText((text) => text
-        .setPlaceholder("https://creator.xiaohongshu.com/publish/publish?source=official")
-        .setValue(this.plugin.settings.xiaohongshuPublishUrl)
-        .onChange(async (value) => {
-          this.plugin.settings.xiaohongshuPublishUrl = value.trim();
-          await this.plugin.saveSettings();
-        }));
 
     // ---------- 默认行为 ----------
     containerEl.createEl("h3", { text: "默认行为" });
