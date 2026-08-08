@@ -11,7 +11,7 @@ const remarkFrontmatterTable: Plugin<[], Root> = () => {
     const newChildren: RootContent[] = []
 
     for (const node of tree.children) {
-      const nodeType = node.type as string
+      const nodeType: string = node.type
 
       if (nodeType !== 'yaml' && nodeType !== 'toml') {
         newChildren.push(node)
@@ -20,23 +20,23 @@ const remarkFrontmatterTable: Plugin<[], Root> = () => {
 
       const frontmatterValue = (node as unknown as { value: string }).value
 
-      let data: Record<string, unknown>
+      let parsed: unknown
       try {
-        data = nodeType === 'toml'
-          ? parseToml(frontmatterValue) as Record<string, unknown>
-          : parseYaml(frontmatterValue) as Record<string, unknown>
+        parsed = nodeType === 'toml'
+          ? parseToml(frontmatterValue)
+          : parseYaml(frontmatterValue) as unknown
       }
       catch {
         newChildren.push(node)
         continue
       }
 
-      if (!data || typeof data !== 'object') {
+      if (!isRecord(parsed)) {
         newChildren.push(node)
         continue
       }
 
-      const rows: TableRow[] = Object.entries(data).map(([key, value]) => {
+      const rows = Object.entries(parsed).map<TableRow>(([key, value]) => {
         const valueStr = formatValue(value)
         const valueChildren = parseInlineMarkdown(valueStr)
 
@@ -48,14 +48,14 @@ const remarkFrontmatterTable: Plugin<[], Root> = () => {
 
         const valueCell: TableCell = {
           type: 'tableCell',
-          children: valueChildren as PhrasingContent[],
+          children: valueChildren,
           data: { hProperties: { className: ['frontmatter-value'] } },
         }
 
         return {
           type: 'tableRow',
           children: [keyCell, valueCell],
-        } as TableRow
+        }
       })
 
       const tableNode: Table = {
@@ -87,10 +87,13 @@ function formatValue(value: unknown): string {
   if (typeof value === 'object') {
     return JSON.stringify(value)
   }
-  return String(value)
+  if (typeof value === 'bigint' || typeof value === 'symbol') {
+    return value.toString()
+  }
+  return ''
 }
 
-function parseInlineMarkdown(text: string) {
+function parseInlineMarkdown(text: string): PhrasingContent[] {
   try {
     const tree = fromMarkdown(text, {
       extensions: [gfm()],
@@ -101,11 +104,15 @@ function parseInlineMarkdown(text: string) {
       return tree.children[0].children
     }
 
-    return tree.children
+    return [{ type: 'text', value: text }]
   }
   catch {
     return [{ type: 'text' as const, value: text }]
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 export default remarkFrontmatterTable

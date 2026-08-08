@@ -24,6 +24,7 @@ import type {
   WechatConnectionResult,
   WechatDraftResult,
   WechatPost,
+  WechatPublishProgress,
 } from "./src/wechat/types";
 
 export default class WindPostPlugin extends Plugin {
@@ -31,20 +32,20 @@ export default class WindPostPlugin extends Plugin {
   private wechatPreviewListeners = new Set<(templateId: string) => void>();
   private pendingWechatPreviewTemplateId = "";
 
-  async onload() {
+  async onload(): Promise<void> {
     await this.loadSettings();
 
     this.registerView(VIEW_TYPE_WINDPOST, (leaf) => new PreviewView(leaf, this));
 
     this.addSettingTab(new WindPostSettingTab(this.app, this));
 
-    this.addRibbonIcon("send", "WindPost: 打开发布中心", () => {
+    this.addRibbonIcon("send", "打开发布中心", () => {
       void this.activateView();
     });
 
     this.addCommand({
-      id: "open-windpost-preview",
-      name: "打开 WindPost 发布中心",
+      id: "open-preview",
+      name: "打开发布中心",
       callback: () => void this.activateView(),
     });
 
@@ -55,30 +56,27 @@ export default class WindPostPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "initialize-windpost-workspace",
-      name: "初始化 WindPost 工作区",
+      id: "initialize-workspace",
+      name: "初始化工作区",
       callback: () => void this.initializeWorkspace(),
     });
   }
 
-  async onunload() {
+  onunload(): void {
     this.wechatPreviewListeners.clear();
     this.pendingWechatPreviewTemplateId = "";
   }
 
-  async loadSettings() {
-    this.settings = Object.assign(
-      {},
-      DEFAULT_SETTINGS,
-      await this.loadData(),
-    );
+  async loadSettings(): Promise<void> {
+    const stored: unknown = await this.loadData();
+    this.settings = parseSettings(stored);
   }
 
-  async saveSettings() {
+  async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
   }
 
-  async activateView() {
+  async activateView(): Promise<void> {
     const { workspace } = this.app;
     let leaf: WorkspaceLeaf | null =
       workspace.getLeavesOfType(VIEW_TYPE_WINDPOST)[0] ?? null;
@@ -90,7 +88,7 @@ export default class WindPostPlugin extends Plugin {
       }
     }
 
-    if (leaf) workspace.revealLeaf(leaf);
+    if (leaf) await workspace.revealLeaf(leaf);
   }
 
   onWechatPreviewRequest(listener: (templateId: string) => void): () => void {
@@ -169,11 +167,15 @@ export default class WindPostPlugin extends Plugin {
     });
   }
 
-  async publishWechatDraft(post: WechatPost): Promise<WechatDraftResult> {
+  async publishWechatDraft(
+    post: WechatPost,
+    onProgress?: (progress: WechatPublishProgress) => void,
+  ): Promise<WechatDraftResult> {
     return publishWechatDraft({
       app: this.app,
       client: this.getWechatClient(),
       post,
+      onProgress,
     });
   }
 
@@ -199,4 +201,52 @@ export default class WindPostPlugin extends Plugin {
     }
     for (const listener of this.wechatPreviewListeners) listener(templateId);
   }
+}
+
+function parseSettings(value: unknown): WindPostSettings {
+  const stored = isRecord(value) ? value : {};
+  return {
+    githubOwner: storedString(stored, "githubOwner", DEFAULT_SETTINGS.githubOwner),
+    githubRepo: storedString(stored, "githubRepo", DEFAULT_SETTINGS.githubRepo),
+    githubBranch: storedString(stored, "githubBranch", DEFAULT_SETTINGS.githubBranch),
+    githubTokenSecret: storedString(stored, "githubTokenSecret", DEFAULT_SETTINGS.githubTokenSecret),
+    wechatAppId: storedString(stored, "wechatAppId", DEFAULT_SETTINGS.wechatAppId),
+    wechatAppSecretName: storedString(stored, "wechatAppSecretName", DEFAULT_SETTINGS.wechatAppSecretName),
+    wechatTemplateId: storedString(stored, "wechatTemplateId", DEFAULT_SETTINGS.wechatTemplateId),
+    wechatAccountName: storedString(stored, "wechatAccountName", DEFAULT_SETTINGS.wechatAccountName),
+    wechatDefaultAuthor: storedString(stored, "wechatDefaultAuthor", DEFAULT_SETTINGS.wechatDefaultAuthor),
+    defaultMarkdownStyle: storedString(stored, "defaultMarkdownStyle", DEFAULT_SETTINGS.defaultMarkdownStyle),
+    enableFootnoteLinks: storedBoolean(stored, "enableFootnoteLinks", DEFAULT_SETTINGS.enableFootnoteLinks),
+    editDebounceMs: storedNumber(stored, "editDebounceMs", DEFAULT_SETTINGS.editDebounceMs),
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function storedString(
+  stored: Record<string, unknown>,
+  key: string,
+  fallback: string,
+): string {
+  return typeof stored[key] === "string" ? stored[key] : fallback;
+}
+
+function storedBoolean(
+  stored: Record<string, unknown>,
+  key: string,
+  fallback: boolean,
+): boolean {
+  return typeof stored[key] === "boolean" ? stored[key] : fallback;
+}
+
+function storedNumber(
+  stored: Record<string, unknown>,
+  key: string,
+  fallback: number,
+): number {
+  return typeof stored[key] === "number" && Number.isFinite(stored[key])
+    ? stored[key]
+    : fallback;
 }

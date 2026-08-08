@@ -7,7 +7,12 @@ import {
 } from "./html";
 import { buildWechatArticle } from "./article";
 import type { WechatApiClient, WechatMultipartFile } from "./api";
-import type { WechatAssetSource, WechatDraftResult, WechatPost } from "./types";
+import type {
+  WechatAssetSource,
+  WechatDraftResult,
+  WechatPost,
+  WechatPublishProgress,
+} from "./types";
 import { validateWechatContent } from "./validation";
 
 interface LoadedImage {
@@ -35,22 +40,26 @@ export async function publishWechatDraft({
   app,
   client,
   post,
+  onProgress = () => {},
 }: {
   app: App;
   client: WechatApiClient | WechatDraftClient;
   post: WechatPost;
+  onProgress?: (progress: WechatPublishProgress) => void;
 }): Promise<WechatDraftResult> {
+  onProgress({ percent: 5, label: "正在检查文章" });
   validateWechatContent(post.contentHtml);
   const sources = extractImageSources(post.contentHtml);
   const coverSource = post.coverSource || sourceToAsset(sources[0] || "");
   if (!coverSource) {
     throw new Error("公众号草稿需要封面。请设置 wechat_cover，或在正文中加入图片。");
   }
+  onProgress({ percent: 15, label: "正在处理封面" });
   const cover = await normalizeArticleImage(await loadImage(app, coverSource));
   const replacements = new Map<string, string>();
   let uploadedImages = 0;
 
-  for (const source of sources) {
+  for (const [index, source] of sources.entries()) {
     if (isWechatHostedImage(source)) continue;
     const asset = sourceToAsset(source);
     if (!asset) throw new Error(`公众号正文包含无法上传的图片地址：${source}`);
@@ -58,14 +67,21 @@ export async function publishWechatDraft({
     const url = await client.uploadArticleImage(toMultipartFile(image));
     replacements.set(source, url);
     uploadedImages += 1;
+    onProgress({
+      percent: 20 + Math.round(((index + 1) / Math.max(1, sources.length)) * 50),
+      label: `正在上传正文图片 ${index + 1}/${sources.length}`,
+    });
   }
 
+  onProgress({ percent: 75, label: "正在上传封面素材" });
   const content = replaceImageSources(post.contentHtml, replacements);
   validateWechatContent(content);
   const thumbMediaId = await client.uploadPermanentImage(toMultipartFile(cover));
+  onProgress({ percent: 90, label: "正在创建公众号草稿" });
   const article = buildWechatArticle(post, content, thumbMediaId);
   const mediaId = await client.addDraft(article);
 
+  onProgress({ percent: 100, label: "公众号草稿已创建" });
   return { mediaId, uploadedImages };
 }
 
@@ -114,7 +130,7 @@ async function normalizeArticleImage(image: LoadedImage): Promise<LoadedImage> {
 
   try {
     for (let attempt = 0; attempt < 6; attempt += 1) {
-      const canvas = document.createElement("canvas");
+      const canvas = createEl("canvas");
       canvas.width = width;
       canvas.height = height;
       const context = canvas.getContext("2d");

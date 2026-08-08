@@ -330,7 +330,7 @@ const rehypeWechatFootnoteLinks: Plugin<[WechatFootnoteLinkOptions?], Root> = (o
                 children: [{ type: 'text', value: link.href }],
               },
             ],
-          } as Element)),
+          })),
         },
       ],
     })

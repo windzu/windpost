@@ -88,14 +88,18 @@ function splitFrontmatter(markdown: string) {
   const match = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!match) return { frontmatter: {} as Record<string, unknown>, body: markdown };
   try {
-    const value = YAML.parse(match[1]);
+    const value: unknown = YAML.parse(match[1]);
     return {
-      frontmatter: value && typeof value === "object" ? value as Record<string, unknown> : {},
+      frontmatter: isRecord(value) ? value : {},
       body: markdown.slice(match[0].length),
     };
   } catch (error) {
     throw new Error(`frontmatter 解析失败：${error instanceof Error ? error.message : String(error)}`);
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function findImages(markdown: string): ImageRef[] {

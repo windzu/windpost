@@ -1,6 +1,6 @@
 {
   "name": "obsidian-windpost",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "Publish the current Obsidian note to Blog and WeChat.",
   "main": "main.js",
   "type": "module",
@@ -8,7 +8,10 @@
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "test": "tsx --test tests/*.test.cjs tests/*.test.ts"
+    "test": "tsx --test tests/*.test.cjs tests/*.test.ts",
+    "lint": "eslint .",
+    "release:check": "node scripts/check-release.cjs",
+    "check": "pnpm lint && pnpm test && pnpm build && pnpm audit --prod --audit-level high && pnpm release:check"
   },
   "keywords": [
     "obsidian",
@@ -20,7 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "highlight.js": "^11.11.1",
-    "juice": "^11.1.0",
+    "juice": "^12.1.2",
     "katex": "^0.16.27",
     "lucide-react": "^0.562.0",
     "mdast-util-from-markdown": "^2.0.2",
@@ -46,16 +49,20 @@
     "yaml": "^2.8.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@types/hast": "^3.0.4",
     "@types/mdast": "^4.0.4",
     "@types/node": "^20.11.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "builtin-modules": "3.3.0",
     "esbuild": "0.24.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-obsidianmd": "^0.4.1",
+    "globals": "^17.9.0",
     "obsidian": "latest",
     "tslib": "2.7.0",
     "tsx": "^4.20.6",
-    "typescript": "5.5.4"
+    "typescript": "5.5.4",
+    "typescript-eslint": "^8.66.0"
   }
 }

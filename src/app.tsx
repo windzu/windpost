@@ -15,7 +15,7 @@ import {
   getBuiltinWechatTemplates,
   type WechatTemplate,
 } from "./wechat/templates";
-import type { WechatPost } from "./wechat/types";
+import type { WechatPost, WechatPublishProgress } from "./wechat/types";
 import type WindPostPlugin from "../main";
 
 interface Props {
@@ -48,6 +48,7 @@ export function App({ plugin }: Props) {
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [publishProgress, setPublishProgress] = useState<WechatPublishProgress | null>(null);
   const [workspaceReady, setWorkspaceReady] = useState<boolean | null>(null);
   const [initializingWorkspace, setInitializingWorkspace] = useState(false);
 
@@ -223,15 +224,18 @@ export function App({ plugin }: Props) {
     if (!confirmed) return;
 
     setPublishing(true);
+    setPublishProgress({ percent: 10, label: "正在准备 Blog 内容" });
     setMessage("正在提交到 GitHub…");
     try {
       const result = await plugin.publishBlog(blogPost);
+      setPublishProgress({ percent: 100, label: "Blog 已提交" });
       setMessage(`已提交 ${result.commitSha.slice(0, 7)}，等待 Vercel 部署。`);
       new Notice("WindPost: Blog 已提交到 GitHub");
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       setMessage(`发布失败：${detail}`);
       new Notice(`WindPost Blog 发布失败：${detail}`, 8000);
+      setPublishProgress(null);
     } finally {
       setPublishing(false);
     }
@@ -249,15 +253,17 @@ export function App({ plugin }: Props) {
     if (!confirmed) return;
 
     setPublishing(true);
+    setPublishProgress({ percent: 0, label: "准备创建公众号草稿" });
     setMessage("正在上传公众号图片并创建草稿…");
     try {
-      const result = await plugin.publishWechatDraft(wechatPost);
+      const result = await plugin.publishWechatDraft(wechatPost, setPublishProgress);
       setMessage(`公众号草稿已创建，上传 ${result.uploadedImages} 张正文图片。`);
       new Notice("WindPost: 公众号草稿已创建");
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       setMessage(`公众号草稿创建失败：${detail}`);
       new Notice(`WindPost 公众号草稿创建失败：${detail}`, 10000);
+      setPublishProgress(null);
     } finally {
       setPublishing(false);
     }
@@ -343,8 +349,26 @@ export function App({ plugin }: Props) {
       </main>
 
       <footer className="windpost-actions">
+        {publishProgress && (
+          <div className="windpost-publish-progress">
+            <div className="windpost-publish-progress-label">
+              <span>{publishProgress.label}</span>
+              <span>{publishProgress.percent}%</span>
+            </div>
+            <div
+              className="windpost-publish-progress-track"
+              role="progressbar"
+              aria-label={publishProgress.label}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={publishProgress.percent}
+            >
+              <div style={{ width: `${publishProgress.percent}%` }} />
+            </div>
+          </div>
+        )}
         {channel === "blog" && (
-          <button type="button" className="mod-cta" disabled={!blogPost || publishing} onClick={publishBlog}>
+          <button type="button" className="mod-cta" disabled={!blogPost || publishing} onClick={() => void publishBlog()}>
             {publishing ? "正在发布…" : "发布至 Blog"}
           </button>
         )}
@@ -353,7 +377,7 @@ export function App({ plugin }: Props) {
             type="button"
             className="mod-cta"
             disabled={!wechatPost || publishing}
-            onClick={publishWechat}
+            onClick={() => void publishWechat()}
           >
             {publishing ? "正在创建草稿…" : "发布至公众号草稿"}
           </button>
