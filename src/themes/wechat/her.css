@@ -79,7 +79,8 @@
 
 /* 刊头：内容来自公众号配置与文章公共元数据。 */
 #bm-md .windpost-hero {
-  margin: 0 -28px 44px;
+  width: 100%;
+  margin: 0 auto 44px;
   padding: 34px 24px 32px;
   color: #25345e;
   background-color: #fcfaf5;
@@ -395,6 +396,8 @@
   display: block;
   width: 100%;
   height: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #bm-md .windpost-cropped-image {
@@ -413,7 +416,8 @@
 }
 
 #bm-md .windpost-end {
-  margin: 44px -28px -52px;
+  width: 100%;
+  margin: 44px auto -52px;
   padding: 44px 28px;
   color: #f8f4e9;
   background-color: #25345e;
