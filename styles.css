@@ -219,6 +219,12 @@
   position: relative;
   display: block;
   overflow: hidden;
+  transform-origin: top left;
+}
+
+.windpost-phone-stage {
+  position: relative;
+  flex: none;
 }
 
 .windpost-phone-screen {
