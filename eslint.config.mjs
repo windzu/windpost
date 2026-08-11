@@ -24,6 +24,7 @@ export default defineConfig(
             "wechat-template-validation.cjs",
             "tests/wechat-template-validator.test.cjs",
             "scripts/check-release.cjs",
+            "scripts/release-version.cjs",
           ],
         },
         tsconfigRootDir: import.meta.dirname,

@@ -55,6 +55,7 @@ troubleshooting. Report security issues privately through GitHub Security Adviso
 
 - [使用说明：安装、初始化、公众号配置与发布](docs/USER_GUIDE.md)
 - [公众号自定义模板规范](docs/WECHAT_TEMPLATE_SPEC.md)
+- [开发者自动发版流程](docs/RELEASING.md)
 
 ## 安装
 
