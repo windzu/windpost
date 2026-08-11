@@ -31,16 +31,18 @@ test("release workflow owns versioning, validation, merge and publication", () =
 test("Release Please updates both package and Obsidian manifest versions", () => {
   const config: unknown = JSON.parse(read("release-please-config.json"));
   const manifest: unknown = JSON.parse(read(".release-please-manifest.json"));
+  const packageJson: unknown = JSON.parse(read("package.json"));
   assert.ok(isRecord(config));
   assert.ok(isRecord(config.packages));
   assert.ok(isRecord(config.packages["."]));
   assert.ok(isRecord(manifest));
+  assert.ok(isRecord(packageJson));
   assert.equal(config["release-type"], "node");
   assert.equal(config["include-v-in-tag"], false);
   assert.deepEqual(config.packages["."]["extra-files"], [
     { type: "json", path: "manifest.json", jsonpath: "$.version" },
   ]);
-  assert.equal(manifest["."], "1.0.3");
+  assert.equal(manifest["."], packageJson.version);
 });
 
 test("CI supports explicit validation of Action-created release branches", () => {
