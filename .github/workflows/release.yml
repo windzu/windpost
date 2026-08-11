@@ -2,44 +2,155 @@ name: Release
 
 on:
   push:
-    tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      finalize:
+        description: Finalize an automatically merged Release PR
+        required: false
+        type: boolean
+        default: false
+      repair_tag:
+        description: Rebuild and upload assets for an existing release tag
+        required: false
+        type: string
 
 permissions:
+  actions: write
+  attestations: write
   contents: write
   id-token: write
-  attestations: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: windpost-release-main
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Create or finalize the Release PR
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Validate and merge the Release PR
+        if: steps.release.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_PR: ${{ steps.release.outputs.pr }}
+        run: |
+          set -euo pipefail
+
+          pr_number=$(jq -r '.number' <<<"$RELEASE_PR")
+          release_branch=$(jq -r '.headBranchName' <<<"$RELEASE_PR")
+          release_sha=$(gh pr view "$pr_number" --json headRefOid --jq '.headRefOid')
+
+          gh workflow run ci.yml --ref "$release_branch"
+
+          run_id=""
+          for _ in $(seq 1 60); do
+            run_id=$(gh run list \
+              --workflow ci.yml \
+              --branch "$release_branch" \
+              --event workflow_dispatch \
+              --limit 20 \
+              --json databaseId,headSha \
+              --jq ".[] | select(.headSha == \"$release_sha\") | .databaseId" \
+              | head -n 1)
+            if [[ -n "$run_id" ]]; then
+              break
+            fi
+            sleep 5
+          done
+
+          if [[ -z "$run_id" ]]; then
+            echo "Unable to find the dispatched CI run for $release_branch" >&2
+            exit 1
+          fi
+
+          gh run watch "$run_id" --exit-status
+          gh pr merge "$pr_number" --squash --delete-branch
+          gh workflow run release.yml --ref main -f finalize=true
+
+      - name: Check out the release commit
+        if: >-
+          steps.release.outputs.release_created == 'true' ||
+          inputs.finalize == true ||
+          inputs.repair_tag != ''
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.release.outputs.sha || inputs.repair_tag || github.sha }}
+
+      - name: Resolve the release target
+        if: >-
+          steps.release.outputs.release_created == 'true' ||
+          inputs.finalize == true ||
+          inputs.repair_tag != ''
+        id: target
+        env:
+          CREATED_TAG: ${{ steps.release.outputs.tag_name }}
+          FINALIZE: ${{ inputs.finalize }}
+          GH_TOKEN: ${{ github.token }}
+          REPAIR_TAG: ${{ inputs.repair_tag }}
+        run: |
+          set -euo pipefail
+
+          release_tag="$CREATED_TAG"
+          if [[ -z "$release_tag" && -n "$REPAIR_TAG" ]]; then
+            release_tag="$REPAIR_TAG"
+          fi
+          if [[ -z "$release_tag" && "$FINALIZE" == "true" ]]; then
+            release_tag=$(node -p "require('./manifest.json').version")
+          fi
+
+          if [[ -z "$release_tag" ]] || ! gh release view "$release_tag" >/dev/null 2>&1; then
+            echo "No GitHub Release is ready for asset publication."
+            exit 0
+          fi
+
+          echo "tag=$release_tag" >> "$GITHUB_OUTPUT"
+
       - uses: pnpm/action-setup@v6
+        if: steps.target.outputs.tag != ''
       - uses: actions/setup-node@v6
+        if: steps.target.outputs.tag != ''
         with:
           node-version: 24
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm check
+      - name: Install dependencies
+        if: steps.target.outputs.tag != ''
+        run: pnpm install --frozen-lockfile
+      - name: Run release checks
+        if: steps.target.outputs.tag != ''
+        run: pnpm check
       - name: Verify tag and package assets
+        if: steps.target.outputs.tag != ''
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
         run: |
           test "$RELEASE_TAG" = "$(node -p "require('./manifest.json').version")"
+          test "$RELEASE_TAG" = "$(node -p "require('./package.json').version")"
       - name: Attest release assets
+        if: steps.target.outputs.tag != ''
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             main.js
             manifest.json
             styles.css
-      - name: Publish GitHub Release
+      - name: Upload release assets
+        if: steps.target.outputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
         run: >-
-          gh release create "$RELEASE_TAG"
-          --title "WindPost $RELEASE_TAG"
-          --generate-notes
+          gh release upload "$RELEASE_TAG"
+          --clobber
           main.js manifest.json styles.css

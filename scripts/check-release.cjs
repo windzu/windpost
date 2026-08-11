@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
+const { resolveMinAppVersion } = require("./release-version.cjs");
 
 const root = path.resolve(__dirname, "..");
 const readJson = (name) => JSON.parse(fs.readFileSync(path.join(root, name), "utf8"));
@@ -12,8 +13,8 @@ const failures = [];
 if (packageJson.version !== manifest.version) {
   failures.push(`package.json (${packageJson.version}) 与 manifest.json (${manifest.version}) 版本不一致`);
 }
-if (versions[manifest.version] !== manifest.minAppVersion) {
-  failures.push(`versions.json 缺少 ${manifest.version} → ${manifest.minAppVersion} 的映射`);
+if (resolveMinAppVersion(versions, manifest.version) !== manifest.minAppVersion) {
+  failures.push(`versions.json 缺少 minAppVersion ${manifest.minAppVersion} 的版本边界`);
 }
 if (!/^\d+\.\d+\.\d+$/.test(manifest.version)) {
   failures.push(`版本号不是标准 SemVer：${manifest.version}`);
