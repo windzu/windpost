@@ -17,6 +17,10 @@ test("release workflow owns versioning, validation, merge and publication", () =
   assert.ok("workflow_dispatch" in workflow.on);
   assert.ok(isRecord(workflow.permissions));
   assert.equal(workflow.permissions.actions, "write");
+  assert.ok(isRecord(workflow.jobs));
+  assert.ok(isRecord(workflow.jobs.release));
+  assert.ok(isRecord(workflow.jobs.release.env));
+  assert.equal(workflow.jobs.release.env.GH_REPO, "${{ github.repository }}");
   assert.match(source, /googleapis\/release-please-action@v4/);
   assert.match(source, /gh workflow run ci\.yml/);
   assert.match(source, /gh pr merge .*--squash --delete-branch/);
